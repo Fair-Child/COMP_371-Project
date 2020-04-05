@@ -25,20 +25,26 @@ using namespace std;
 
 GLuint loadTexture(const char *filename)
 {
-  // Step1 Create and bind textures
+//  // Step1 Create and bind textures
   GLuint textureId = 0;
   glGenTextures(1, &textureId);
   assert(textureId != 0);
 
 
   glBindTexture(GL_TEXTURE_2D, textureId);
+//
+//  // Step2 Set filter parameters
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
-  // Step2 Set filter parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
- 
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+
+
+
   // Step3 Load Textures with dimension data
   int width, height, nrChannels;
   unsigned char *data = stbi_load(filename, &width, &height, &nrChannels, 0);
@@ -49,21 +55,21 @@ GLuint loadTexture(const char *filename)
   }
 
   // Step4 Upload the texture to the PU
-  GLenum format = 0;
-  if (nrChannels == 1)
-      format = GL_RED;
-  else if (nrChannels == 3)
-      format = GL_RGB;
-  else if (nrChannels == 4)
-      format = GL_RGBA;
-  glTexImage2D(GL_TEXTURE_2D, 0, format, width, height,
-               0, format, GL_UNSIGNED_BYTE, data);
+         if(nrChannels == 3) {
+                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+                              GL_RGB, GL_UNSIGNED_BYTE, data);
+             } else if(nrChannels == 4) {
+                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
+                              GL_RGBA, GL_UNSIGNED_BYTE, data);
+             }
+             glGenerateMipmap(GL_TEXTURE_2D);
 
 
   // Step5 Free resources
   stbi_image_free(data);
   glBindTexture(GL_TEXTURE_2D, 0);
   return textureId;
+
 }
 
 //learnOpenGL cubeMap Function

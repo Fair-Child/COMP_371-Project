@@ -17,13 +17,16 @@ in vec4 FragPosLightSpace;
 
 out vec4 FragColor;
 
-uniform sampler2D textureSampler;
+uniform sampler2D snowTexture;
+uniform sampler2D sandyTexture;
+uniform sampler2D rockyTexture;
+uniform sampler2D grassTexture;
+uniform sampler2D waterTexture;
 uniform sampler2D shadowMap;
 
 
 uniform vec3 color;
 uniform  bool textureOn;
-uniform bool withText;
 uniform bool shadowsOn;
 
 
@@ -86,27 +89,48 @@ void main()
                        result = (ambient  + diffuse + specular);
     
     
-    
+    if(textureOn) {
     
     if(FragPos.y <= 1) {
-        vec3 waterColor = vec3(0.39f,0.65f,0.77f);
+//        vec3 waterColor = vec3(0.39f,0.65f,0.77f);
         
-        FragColor = vec4(waterColor * result,1.0f); //water
+        FragColor = texture(waterTexture, vertexUV); //water
     } else if (FragPos.y >= 1 && FragPos.y <=5.5){
-        vec3 sandColor = vec3(0.86f,0.70f,0.30f);
-        FragColor = vec4(sandColor* result ,1.0f); //sand
+//        vec3 sandColor = vec3(0.86f,0.70f,0.30f);
+            FragColor = texture(sandyTexture, vertexUV); //sand
     } else if (FragPos.y >= 5.5 && FragPos.y <=17.5){
         vec3 grassColor =vec3(0.35f,0.56f,0.30f);
-        FragColor = vec4(grassColor* result ,1.0f); //grass
+//        FragColor = vec4(grassColor* result ,1.0f); //grass
+             FragColor = texture(grassTexture, vertexUV);
        }else if (FragPos.y >= 17.5 && FragPos.y <=26.5){
-           vec3 rockColor = vec3(0.75f,0.53f,0.4f);
-        FragColor = vec4(rockColor* result ,1.0f); //rock
+//           vec3 rockColor = vec3(0.75f,0.53f,0.4f);
+         FragColor = texture(rockyTexture, vertexUV);
        } else {
            vec3 snowColor = vec3(1.0f);
-           FragColor = vec4(snowColor,1.0f); //snow
+//           FragColor = vec4(snowColor,1.0f);
+           FragColor = texture(snowTexture, vertexUV); //snow
        }
         
-    
+    } else {
+         if(FragPos.y <= 1) {
+                vec3 waterColor = vec3(0.39f,0.65f,0.77f);
+                
+                FragColor = vec4(waterColor * result,1.0f); //water
+            } else if (FragPos.y >= 1 && FragPos.y <=5.5){
+                vec3 sandColor = vec3(0.86f,0.70f,0.30f);
+                FragColor = vec4(sandColor* result ,1.0f); //sand
+            } else if (FragPos.y >= 5.5 && FragPos.y <=17.5){
+                vec3 grassColor =vec3(0.35f,0.56f,0.30f);
+                FragColor = vec4(grassColor* result ,1.0f); //grass
+               }else if (FragPos.y >= 17.5 && FragPos.y <=26.5){
+                   vec3 rockColor = vec3(0.75f,0.53f,0.4f);
+                FragColor = vec4(rockColor* result ,1.0f); //rock
+               } else {
+                   vec3 snowColor = vec3(1.0f);
+                   FragColor = vec4(snowColor,1.0f);
+
+               }
+    }
 }
 
 

@@ -7,6 +7,7 @@
 // - https://learnopengl.com/Getting-started/Hello-Triangle
 // - https://learnopengl.com/Advanced-OpenGL/Advanced-GLSL (for shader class)
 // - http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
+// - texutres from textures.com
 
 //SimeplexNoise is a library https://github.com/SRombauts/SimplexNoise
 //It created by Sébastien Rombauts
@@ -59,6 +60,11 @@ mat4 WorldTransformMatrix(1.f);
 //textures
 
 GLuint depthMap;
+GLuint snowTextureID;
+GLuint rockTextureID;
+GLuint sandTextureID;
+GLuint grassTextureID;
+GLuint waterTextureID;
 vector<GLuint> VAO(100);
 
 //primatative rendering options
@@ -193,13 +199,21 @@ int main(int argc, char*argv[])
    "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Front.bmp",
    "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Back.bmp"
     };
+    
+
       
    GLuint cubemapTexture = loadCubemap(faces);
      glUseProgram(skyBoxShader);
     glUniform1i(glGetUniformLocation(skyBoxShader, "skybox"), 0);
     
     
-    
+    //load textures
+ 
+        snowTextureID = loadTexture("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/Textures/snowtexture3.jpg");
+        rockTextureID = loadTexture("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/Textures/rockyTexture.jpg");
+        sandTextureID = loadTexture("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/Textures/sandyTexture.jpg");
+        grassTextureID = loadTexture("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/Textures/grassTexture3.jpg");
+        waterTextureID = loadTexture("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/Textures/waterTexture.jpg");
     
     
 
@@ -252,7 +266,16 @@ int main(int argc, char*argv[])
     
     //textures
             glUseProgram(textureShader);
-            glUniform1i(glGetUniformLocation(textureShader, "shadowMap"), 0);
+//            glUniform1i(glGetUniformLocation(textureShader, "shadowMap"), 0);
+         glUniform1i(glGetUniformLocation(textureShader, "snowTexture"), 0);
+    glUniform1i(glGetUniformLocation(textureShader, "sandyTexture"), 1);
+       glUniform1i(glGetUniformLocation(textureShader, "rockyTexture"), 2);
+       glUniform1i(glGetUniformLocation(textureShader, "grassTexture"), 3);
+       glUniform1i(glGetUniformLocation(textureShader, "waterTexture"), 4);
+    
+    
+    
+
   
     
 
@@ -355,7 +378,15 @@ int main(int argc, char*argv[])
                     GLuint lightSpaceMatrixShader = glGetUniformLocation(textureShader, "lightSpaceMatrix");
                     glUniformMatrix4fv(lightSpaceMatrixShader, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
             
-
+           
+            glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 1);
+            if(textureOn) {
+                    glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 1);
+                cout<<"text on"<<endl;
+            } else {
+                  glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 0);
+                cout<<"text off"<<endl;
+            }
             
 
             renderTerrain(VAO,textureShader, nIndices, cameraPosition);
@@ -596,6 +627,9 @@ int main(int argc, char*argv[])
      
          if (key == GLFW_KEY_O && action == GLFW_PRESS)
                                   octaves -= 1;
+         if (key == GLFW_KEY_B && action == GLFW_PRESS)
+                textureOn = !textureOn;
+      
      }
    
 
@@ -605,8 +639,8 @@ int main(int argc, char*argv[])
 void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset, GLuint &shader) {
     vector<float> normals;
     vector<float> vertices;
-    vector<float> colors;
     vector <int> indices(6 * (mapY - 1) * (mapY - 1));
+    vector<float> textureCoords;
 
   
 
@@ -619,31 +653,39 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset, GLuint &shad
     float  rangedNoise =0;
     
 
+
     for (int y = 0; y < mapY ; y++)
         for (int x = 0; x < mapX; x++) {
             vertices.push_back(x);
+            textureCoords.push_back(x);
                     amp  = 1;
                     freq = 1;
                     float noiseHeight = 0;
                     for (int i = 0; i < octaves; i++) {
                         float xSample = (x + xOffset * (mapX-1))  / noiseScale * freq;
                         float ySample = (y + yOffset * (mapY-1)) / noiseScale * freq;
-                     
-                    
-                     
-                                   
+
+
+
+
                         float perlinValue = SimplexNoise::noise(xSample,ySample);
                         noiseHeight += perlinValue * amp;
-                           
+
                         amp  *= persistence;
                         freq *= lacunarity;
                     }
             rangedNoise = Remap(noiseHeight, -1.0, 1, 0, 1);
-       
+
 
             vertices.push_back((rangedNoise * meshHeight));
             vertices.push_back(y);
+            textureCoords.push_back(y);
         }
+    
+ 
+         
+    
+
 
 
 
@@ -727,7 +769,12 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset, GLuint &shad
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(1);
     
-
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+     glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(float), &textureCoords[0], GL_STATIC_DRAW);
+     
+     // Configure vertex colors attribute
+     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+     glEnableVertexAttribArray(2);
 
 
     
@@ -750,13 +797,24 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
     
     
 
- 
-
-
   
 
     for (int y = 0; y < yMapChunks; y++)
         for (int x = 0; x < xMapChunks; x++) {
+            glActiveTexture(GL_TEXTURE0 +  0);
+            glBindTexture(GL_TEXTURE_2D, snowTextureID);
+            
+            glActiveTexture(GL_TEXTURE0 + 1);
+            glBindTexture(GL_TEXTURE_2D, sandTextureID);
+//
+            glActiveTexture(GL_TEXTURE0 + 2);
+            glBindTexture(GL_TEXTURE_2D, rockTextureID);
+
+            glActiveTexture(GL_TEXTURE0 + 3);
+            glBindTexture(GL_TEXTURE_2D, grassTextureID);
+//
+            glActiveTexture(GL_TEXTURE0+ 4);
+            glBindTexture(GL_TEXTURE_2D, waterTextureID);
     
 
                mat4 mvp = glm::mat4(1.0f);
