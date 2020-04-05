@@ -69,11 +69,14 @@ vec3 cameraPosition(0.0f,56.0f,30.0f);
 vec3 cameraLookAt(0.0f, 0.0f, 0.0f);
 vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
-    
+//vectors that hold geomtry information
+
+
 
 
 void renderTerrain(vector <GLuint> &VAO , const GLuint &shader,  int &nIndices,vec3 &cameraPosition);
-void createTerrianGeometry(GLuint &VAO, int xOffset, int yOffset);
+void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset);
+
 
 
 
@@ -95,6 +98,8 @@ float meshHeight = 32;  // Vertical scaling
 float noiseScale = 64;  // Horizontal scaling
 float persistence = 0.5;
 float lacunarity = 2;
+
+
 
 
 
@@ -190,7 +195,7 @@ int main(int argc, char*argv[])
             //camera information for mouse implementation
             float cameraSpeed = 0.5f;
             float cameraFastSpeed = 2 * cameraSpeed;
-            float cameraHorizontalAngle = 90.0f;
+    float cameraHorizontalAngle = -34.0f;
             float cameraVerticalAngle = 0.0f;
     
     
@@ -236,7 +241,7 @@ int main(int argc, char*argv[])
     for (int y = 0; y < yMapChunks; y++)
                      for (int x = 0; x < xMapChunks; x++) {
                          createTerrianGeometry(VAO[x + y*xMapChunks], x, y);
-
+                         cout<<x + y*xMapChunks<<endl;
 
                      }
     
@@ -253,7 +258,7 @@ int main(int argc, char*argv[])
    
 
             
-             projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,100.0f);
+            projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,300.0f);
              viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt,cameraUp );
             viewMatrix = viewMatrix * WorldTransformMatrix;
 
@@ -320,8 +325,8 @@ int main(int argc, char*argv[])
             cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
             cameraVerticalAngle   -= dy * cameraAngularSpeed * dt;
                        
-            // Clamp vertical angle to -180,180 (for full rotation!)
-            cameraVerticalAngle = std::max(-180.0f, std::min(180.0f, cameraVerticalAngle));
+         
+            cameraVerticalAngle = std::max(-90.0f, std::min(90.0f, cameraVerticalAngle));
             if (cameraHorizontalAngle > 360)
                 {
                     cameraHorizontalAngle -= 360;
@@ -338,7 +343,7 @@ int main(int argc, char*argv[])
             vec3 cameraSideVector = cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
             normalize(cameraSideVector);
 
-             
+      
             
             //these are the following keybindings to control the olaf, the camera and the world orientation, textures, lighting and shadows
             
@@ -479,7 +484,7 @@ int main(int argc, char*argv[])
             
             
             viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
-            projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,100.0f);
+            projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,600.0f);
             
             
          
@@ -514,11 +519,11 @@ int main(int argc, char*argv[])
 
 
 
-void createTerrianGeometry(GLuint &VAO, int xOffset, int yOffset) {
-    std::vector<int> indices;
-    std::vector<float> vertices;
-    std::vector<float> normals;
-    
+void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
+    vector<float> normals;
+    vector<float> vertices;
+    vector<int> indices;
+
      
      float amp  = 1;
      float freq = 1;
@@ -527,7 +532,7 @@ void createTerrianGeometry(GLuint &VAO, int xOffset, int yOffset) {
     //create vertices and noise
     float  rangedNoise =0;
 
-    for (int y = 0; y < mapY + 1; y++)
+    for (int y = 0; y < mapY ; y++)
         for (int x = 0; x < mapX; x++) {
             vertices.push_back(x);
                     amp  = 1;
@@ -550,6 +555,7 @@ void createTerrianGeometry(GLuint &VAO, int xOffset, int yOffset) {
             vertices.push_back(y);
         }
 
+    
     
     //calculate indices for EBO
     
@@ -644,6 +650,8 @@ void createTerrianGeometry(GLuint &VAO, int xOffset, int yOffset) {
 
 void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, vec3 &cameraPosition) {
 
+    
+    
 
     GLuint modelViewProjection_terrain = glGetUniformLocation(shader, "mvp");
  
