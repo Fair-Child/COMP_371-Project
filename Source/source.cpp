@@ -165,13 +165,38 @@ int main(int argc, char*argv[])
     
        GLuint textureShader = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/shader-texture.vs","/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/shader-texture.fs");
     
+     GLuint skyBoxShader = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/skyBoxShader.vs","/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/skyBoxShader.fs");
+    
     
     //shader for simple shadows
     GLuint simpleShadow = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/assignments/A1_29644490/Assignment1_Framework/Source/simple-shadow-shader.vs", "/Users/matthew/Documents/school/WINTER 2020/COMP 371/assignments/A1_29644490/Assignment1_Framework/Source/simple-shadow-shader.fs");
 
+    
+    //skybox VAO and VBO
+    
+    GLuint skyBoxVAO, skyBoxVBO;
+    glGenVertexArrays(1, &skyBoxVAO);
+       glGenBuffers(1, &skyBoxVBO);
+       glBindVertexArray(skyBoxVBO);
+       glBindBuffer(GL_ARRAY_BUFFER, skyBoxVBO);
+       glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+       glEnableVertexAttribArray(0);
+       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+       
 
-    
-    
+    vector<std::string> faces
+    {
+   "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Right.bmp",
+    "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Left.bmp",
+   "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Top.bmp",
+   "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Bottom.bmp",
+   "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Front.bmp",
+   "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Back.bmp"
+    };
+      
+   GLuint cubemapTexture = loadCubemap(faces);
+     glUseProgram(skyBoxShader);
+    glUniform1i(glGetUniformLocation(skyBoxShader, "skybox"), 0);
     
     
     
@@ -334,6 +359,21 @@ int main(int argc, char*argv[])
             
 
             renderTerrain(VAO,textureShader, nIndices, cameraPosition);
+            
+            glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+            glUseProgram(skyBoxShader);
+            GLuint skyBoxViewMatrix = glGetUniformLocation(skyBoxShader, "view");
+            GLuint skyBoxProjectionMatrix = glGetUniformLocation(skyBoxShader, "projection");
+           mat4 view = mat4(mat3(viewMatrix));
+            glUniformMatrix4fv(skyBoxViewMatrix, 1, GL_FALSE, &view[0][0]);
+             glUniformMatrix4fv(skyBoxProjectionMatrix, 1, GL_FALSE, &projectionMatrix[0][0]);
+          
+            // skybox cube
+            glBindVertexArray(skyBoxVAO);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+          glDepthMask(GL_TRUE);
             
 
         
