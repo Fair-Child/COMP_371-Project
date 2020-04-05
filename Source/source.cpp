@@ -157,12 +157,12 @@ int main(int argc, char*argv[])
 
     
    
-    GLuint lamp_Shader = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/assignments/A1_29644490/Assignment1_Framework/Source/lampShader.vs", "/Users/matthew/Documents/school/WINTER 2020/COMP 371/assignments/A1_29644490/Assignment1_Framework/Source/lampShader.fs");
+    GLuint lamp_Shader = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/lampShader.vs","/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/lampShader.fs");
        
     
     //texture shader for grid, olaf
     
-       GLuint textureShader = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/assignments/A1_29644490/Assignment1_Framework/Source/shader-texture.vs", "/Users/matthew/Documents/school/WINTER 2020/COMP 371/assignments/A1_29644490/Assignment1_Framework/Source/shader-texture.fs");
+       GLuint textureShader = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/shader-texture.vs","/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/shader-texture.fs");
     
     
     //shader for simple shadows
@@ -263,7 +263,7 @@ int main(int argc, char*argv[])
              modelViewProjection = projectionMatrix * viewMatrix * modelMatrix;
  
             // set the background color to the greenish grey
-            glClearColor(0.2f, 0.29f, 0.29f,1.0f);
+            glClearColor(0.68f, 0.87f, 0.95f,1.0f);
     
             // clear the color and depth buffer at the beginning of each loop
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -543,8 +543,9 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset, GLuint &shad
                         float xSample = (x + xOffset * (mapX-1))  / noiseScale * freq;
                         float ySample = (y + yOffset * (mapY-1)) / noiseScale * freq;
                      
-                        float xSample1 = (((x + xOffset) / (mapX-1))/noiseScale * freq);
-                        float ySample1 =(((y + yOffset) / (mapY-1))/noiseScale * freq);
+                    
+                     
+                                   
                         float perlinValue = SimplexNoise::noise(xSample,ySample);
                         noiseHeight += perlinValue * amp;
                            
@@ -603,20 +604,11 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset, GLuint &shad
        normals.push_back(normal.z);
    }
    
-    std::vector<vec4> biomeColors;
-    biomeColors.push_back(vec4(0.05,0.2f,0.6f,0.6f));
-        biomeColors.push_back(vec4(0.25,0.2f,0.7f,0.4f));
-        biomeColors.push_back(vec4(0.75,0.5f,0.3f,0.5f));
-        biomeColors.push_back(vec4(0.95,1.0f,1.0f,1.0f));
-           
-    for(int i =0; i<vertices.size();i++) {
-        glUniform3f(color,1.0f,1.0f,1.0f);
-    }
- 
+
     
+
     
-    
-    
+   
     
  
   GLuint VBO[3], EBO;
@@ -647,13 +639,8 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset, GLuint &shad
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(1);
     
-//    glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-//    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(float), &colors[0], GL_STATIC_DRAW);
-//
-//    // Configure vertex colors attribute
-//    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-//    glEnableVertexAttribArray(2);
-    
+
+
 
     
 
@@ -670,6 +657,7 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
     
  glUseProgram(shader);
     GLuint modelViewProjection_terrain = glGetUniformLocation(shader, "mvp");
+       GLuint colors = glGetUniformLocation(shader, "mvp");
 
  
 
@@ -691,7 +679,7 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
            
                 glBindVertexArray(VAO[x + y*xMapChunks]);
 
-              
+//                glUniform3f(colors,1.0f,0.5f,1.0f);
                 glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
  
                 

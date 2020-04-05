@@ -94,158 +94,18 @@ float shadowCalculationNoTexture(vec4 fragPosLightSpace)
 
 void main()
 {
-    vec3 ambient;
-    vec3 result;
-    float shadow = ShadowCalculation(FragPosLightSpace);
-    float shadowNoText = shadowCalculationNoTexture(FragPosLightSpace);
-    if(shadowsOn) {
-        if(textureOn) {
-            float shininess = 64.0f;
-            float ambientStrength = 0.01;
-            // ambient
-          
-            ambient =  ambientStrength * texture(textureSampler, vertexUV).rgb;
-            
-        
-            // diffuse
-            vec3 norm = normalize(Normal);
-            vec3 lightDir = normalize(lightPos - FragPos);
-            float diff = max(dot(norm, lightDir), 0.0);
-            vec3 diffuse = lightColor * diff * texture(textureSampler, vertexUV).rgb;
-            
-            // specular
-             float specularStrength = 0.5;
-            vec3 viewDir = normalize(viewPos - FragPos);
-            vec3 reflectDir = reflect(-lightDir, norm);
-            float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-            vec3 specular = specularStrength * spec * lightColor;
-        
-         
-       
-                if(withText)
-                 {
-                    result = (ambient + (1.0 - shadow) * (diffuse + specular)) ;
-                  
-                 }else
-                 {
-                    float ambientStrength = 0.01;
-                    vec3 ambient = ambientStrength * lightColor;
-            
-                    //diffuse
-                    vec3 norm = normalize(Normal);
-                    vec3 lightDirection = normalize(lightPos - FragPos);
-                    float diff = max(dot(norm, lightDirection), 0.0f);
-                    vec3 diffuse = diff * lightColor;
-            
-                    float specularStrength = 0.5;
-                    vec3 viewDir = normalize(viewPos - FragPos);
-                    vec3 reflectDir = reflect(-lightDirection, norm);
-                    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-                    vec3 specular = specularStrength * spec * lightColor;
-                    result = (ambient  + diffuse + specular) * color;
-           
-                }
-
-         FragColor = vec4(result,1.0f);
-        
-        }else
-                {
-                //ambient
-                float ambientStrength = 0.01;
-                vec3 ambient = ambientStrength * lightColor;
-                
-                //diffuse
-                vec3 norm = normalize(Normal);
-                vec3 lightDirection = normalize(lightPos - FragPos);
-                float diff = max(dot(norm, lightDirection), 0.0f);
-                vec3 diffuse = diff * lightColor;
-                
-                float specularStrength = 0.5;
-                vec3 viewDir = normalize(viewPos - FragPos);
-                vec3 reflectDir = reflect(-lightDirection, norm);
-                float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-                vec3 specular = specularStrength * spec * lightColor;
-                
-                vec3 result =  (ambient  + diffuse + specular) * color  * (1.0 - shadowNoText) ;
-
-                FragColor = vec4(result,1.0f);
-                
-              
-            }
-    }else
-    {
-        if(textureOn) {
-                   float shininess = 64.0f;
-                   float ambientStrength = 0.01;
-                   // ambient
-                    vec3 ambient =  ambientStrength * lightColor;
-               
-                   // diffuse
-                   vec3 norm = normalize(Normal);
-                   vec3 lightDir = normalize(lightPos - FragPos);
-                   float diff = max(dot(norm, lightDir), 0.0);
-                   vec3 diffuse = lightColor * diff;
-                   
-                   // specular
-                    float specularStrength = 0.5;
-                   vec3 viewDir = normalize(viewPos - FragPos);
-                   vec3 reflectDir = reflect(-lightDir, norm);
-                   float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-                   vec3 specular = specularStrength * spec * lightColor;
-               
-                  
-              
-                       if(withText)
-                        {
-                           result = (ambient + diffuse + specular) * texture(textureSampler, vertexUV).rgb ;
-                  
-                        }else
-                        {
-                           float ambientStrength = 0.01;
-                           vec3 ambient = ambientStrength * lightColor;
-                   
-                           //diffuse
-                           vec3 norm = normalize(Normal);
-                           vec3 lightDirection = normalize(lightPos - FragPos);
-                           float diff = max(dot(norm, lightDirection), 0.0f);
-                           vec3 diffuse = diff * lightColor;
-                   
-                           float specularStrength = 0.5;
-                           vec3 viewDir = normalize(viewPos - FragPos);
-                           vec3 reflectDir = reflect(-lightDirection, norm);
-                           float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-                           vec3 specular = specularStrength * spec * lightColor;
-                           result = (ambient + diffuse + specular) * color;
-                  
-                       }
-
-                FragColor = vec4(result,1.0f);
-               
-               }else
-                       {
-                       //ambient
-                       float ambientStrength = 0.01;
-                       vec3 ambient = ambientStrength * lightColor;
-                       
-                       //diffuse
-                       vec3 norm = normalize(Normal);
-                       vec3 lightDirection = normalize(lightPos - FragPos);
-                       float diff = max(dot(norm, lightDirection), 0.0f);
-                       vec3 diffuse = diff * lightColor;
-                       
-                       float specularStrength = 0.5;
-                       vec3 viewDir = normalize(viewPos - FragPos);
-                       vec3 reflectDir = reflect(-lightDirection, norm);
-                       float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-                       vec3 specular = specularStrength * spec * lightColor;
-                       
-                       vec3 result = (ambient + diffuse + specular) * color;
-
-                       FragColor = vec4(result,1.0f);
-                       
-                     
-                   }
-    }
+    
+    if(FragPos.y <= 1) {
+        FragColor = vec4(0.39f,0.65f,0.77f,1.0f); //water
+    } else if (FragPos.y >= 1 && FragPos.y <=5.5){
+        FragColor = vec4(0.86f,0.70f,0.30f,1.0f); //sand
+    } else if (FragPos.y >= 5.5 && FragPos.y <=17.5){
+        FragColor = vec4(0.35f,0.56f,0.30f,1.0f);
+       }else if (FragPos.y >= 17.5 && FragPos.y <=26.5){
+        FragColor = vec4(0.75f,0.53f,0.4f,0.36f);
+       } else {
+           FragColor = vec4(1.0f);
+       }
         
     
 }
