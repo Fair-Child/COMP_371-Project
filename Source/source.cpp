@@ -75,7 +75,7 @@ vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
 
 void renderTerrain(vector <GLuint> &VAO , const GLuint &shader,  int &nIndices,vec3 &cameraPosition);
-void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset);
+void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset,GLuint &shader);
 
 
 
@@ -87,14 +87,13 @@ int xMapChunks = 10;
 int yMapChunks = 10;
 int mapX = 64;
 int mapY = 64;
-int posX = 0;
-int posY = 0;
+
 
 
 //noise options (would love to make this user definable with a GUI ...a boy can dream
 
 int octaves = 5;
-float meshHeight = 32;  // Vertical scaling
+float meshHeight = 25;  // Vertical scaling
 float noiseScale = 64;  // Horizontal scaling
 float persistence = 0.5;
 float lacunarity = 2;
@@ -130,7 +129,6 @@ int main(int argc, char*argv[])
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     int screenWidth, screenHeight;
 
-    
     // Create Window and rendering context using GLFW, resolution is 1024x768
     GLFWwindow* window = glfwCreateWindow(1024, 768, "A1_29644490", NULL, NULL);
     if (window == NULL)
@@ -142,8 +140,8 @@ int main(int argc, char*argv[])
     
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwMakeContextCurrent(window);
-//    glViewport(0, 0, 1024, 768);
     glfwSetKeyCallback(window, key_callback);
+    
 
     glewExperimental = true; // Needed for core profile
     if (glewInit() != GLEW_OK) {
@@ -195,7 +193,7 @@ int main(int argc, char*argv[])
             //camera information for mouse implementation
             float cameraSpeed = 0.5f;
             float cameraFastSpeed = 2 * cameraSpeed;
-    float cameraHorizontalAngle = -34.0f;
+            float cameraHorizontalAngle = -34.0f;
             float cameraVerticalAngle = 0.0f;
     
     
@@ -240,8 +238,7 @@ int main(int argc, char*argv[])
       
     for (int y = 0; y < yMapChunks; y++)
                      for (int x = 0; x < xMapChunks; x++) {
-                         createTerrianGeometry(VAO[x + y*xMapChunks], x, y);
-                         cout<<x + y*xMapChunks<<endl;
+                         createTerrianGeometry(VAO[x + y*xMapChunks], x, y,textureShader);
 
                      }
     
@@ -519,10 +516,13 @@ int main(int argc, char*argv[])
 
 
 
-void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
+void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset, GLuint &shader) {
     vector<float> normals;
     vector<float> vertices;
-    vector<int> indices;
+    vector<float> colors;
+    vector <int> indices(6 * (mapY - 1) * (mapY - 1));
+
+            GLuint color = glGetUniformLocation(shader, "color");
 
      
      float amp  = 1;
@@ -531,6 +531,7 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
 
     //create vertices and noise
     float  rangedNoise =0;
+    
 
     for (int y = 0; y < mapY ; y++)
         for (int x = 0; x < mapX; x++) {
@@ -541,7 +542,9 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
                     for (int i = 0; i < octaves; i++) {
                         float xSample = (x + xOffset * (mapX-1))  / noiseScale * freq;
                         float ySample = (y + yOffset * (mapY-1)) / noiseScale * freq;
-                        
+                     
+                        float xSample1 = (((x + xOffset) / (mapX-1))/noiseScale * freq);
+                        float ySample1 =(((y + yOffset) / (mapY-1))/noiseScale * freq);
                         float perlinValue = SimplexNoise::noise(xSample,ySample);
                         noiseHeight += perlinValue * amp;
                            
@@ -549,58 +552,50 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
                         freq *= lacunarity;
                     }
             rangedNoise = Remap(noiseHeight, -1.0, 1, 0, 1);
-            float easedNoise = rangedNoise;
+       
 
-            vertices.push_back((easedNoise * meshHeight*0.8));
+            vertices.push_back((rangedNoise * meshHeight));
             vertices.push_back(y);
         }
 
-    
-    
-    //calculate indices for EBO
-    
-    for (int y = 0; y < mapY; y++)
-        for (int x = 0; x < mapX; x++) {
-            int pos = x + y*mapX;
-            
-            if (x == mapX - 1 || y == mapY - 1) {
-                // Don't create indices for right or top edge
-                continue;
-            } else {
-                // Top left triangle of square
-                indices.push_back(pos + mapX);
-                indices.push_back(pos);
-                indices.push_back(pos + mapX + 1);
-                // Bottom right triangle of square
-                indices.push_back(pos + 1);
-                indices.push_back(pos + 1 + mapX);
-                indices.push_back(pos);
-            }
+
+
+
+    int pointer = 0;
+    for(int y = 0; y < mapY - 1; y++) {
+        for(int x = 0; x < mapX - 1; x++) {
+            int topLeft = (y * mapY) + x;
+            int topRight = topLeft + 1;
+            int bottomLeft = ((y + 1) * mapY) + x;
+            int bottomRight = bottomLeft + 1;
+            indices[pointer++] = topLeft;
+            indices[pointer++] = bottomLeft;
+            indices[pointer++] = topRight;
+            indices[pointer++] = topRight;
+            indices[pointer++] = bottomLeft;
+            indices[pointer++] = bottomRight;
         }
-    
- 
-
-
+    }
 //calculate normals for lighting
     int pos;
    glm::vec3 normal;
 
    std::vector<glm::vec3> verts;
-   
+
    // Get the vertices of each triangle in mesh
    // For each group of indices
    for (int i = 0; i < indices.size(); i += 3) {
-       
+
        // Get the vertices (point) for each index
        for (int j = 0; j < 3; j++) {
            pos = indices[i+j]*3;
            verts.push_back(glm::vec3(vertices[pos], vertices[pos+1], vertices[pos+2]));
        }
-       
+
        // Get vectors of two edges of triangle
        glm::vec3 U = verts[i+1] - verts[i];
        glm::vec3 V = verts[i+2] - verts[i];
-       
+
        // Calculate normal
        normal = glm::normalize(-glm::cross(U, V));
        normals.push_back(normal.x);
@@ -608,9 +603,21 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
        normals.push_back(normal.z);
    }
    
-
+    std::vector<vec4> biomeColors;
+    biomeColors.push_back(vec4(0.05,0.2f,0.6f,0.6f));
+        biomeColors.push_back(vec4(0.25,0.2f,0.7f,0.4f));
+        biomeColors.push_back(vec4(0.75,0.5f,0.3f,0.5f));
+        biomeColors.push_back(vec4(0.95,1.0f,1.0f,1.0f));
+           
+    for(int i =0; i<vertices.size();i++) {
+        glUniform3f(color,1.0f,1.0f,1.0f);
+    }
+ 
     
-
+    
+    
+    
+    
  
   GLuint VBO[3], EBO;
   
@@ -632,13 +639,22 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
   
-  // Bind vertices to VBO
+//  // Bind vertices to VBO
   glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
   glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(float), &normals[0], GL_STATIC_DRAW);
-  
+
   // Configure vertex normals attribute
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(1);
+    
+//    glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+//    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(float), &colors[0], GL_STATIC_DRAW);
+//
+//    // Configure vertex colors attribute
+//    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+//    glEnableVertexAttribArray(2);
+    
+
     
 
 
@@ -652,22 +668,21 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
 
     
     
-
+ glUseProgram(shader);
     GLuint modelViewProjection_terrain = glGetUniformLocation(shader, "mvp");
+
  
 
-    
-    posX = (int)(cameraPosition.x - posX) / mapX + xMapChunks / 2;
-    posY = (int)(cameraPosition.y - posY) / mapY + yMapChunks / 2;
 
-    
+  
 
     for (int y = 0; y < yMapChunks; y++)
         for (int x = 0; x < xMapChunks; x++) {
     
 
                mat4 mvp = glm::mat4(1.0f);
-               mvp = translate(mvp, glm::vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapY / 2.0 + (mapY - 1) * y));
+            mvp = translate(mvp, glm::vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapY / 2.0 + (mapY - 1) * y));
+
             
 
                 glUniformMatrix4fv(modelViewProjection_terrain, 1, GL_FALSE, &mvp[0][0]);
@@ -678,8 +693,9 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
 
               
                 glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
+ 
                 
-
+            glBindVertexArray(0);
                
 
 
