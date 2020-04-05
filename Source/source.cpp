@@ -46,6 +46,7 @@ bool shadowsOn = true;
 vec3 lightpos (0.f, 30.0f,0.f);
 
 
+
 //worldspace matrix
 
 mat4 projectionMatrix = mat4(1.0f);
@@ -157,7 +158,7 @@ int main(int argc, char*argv[])
 
     
    
-    GLuint lamp_Shader = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/lampShader.vs","/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/lampShader.fs");
+//    GLuint lamp_Shader = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/lampShader.vs","/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/lampShader.fs");
        
     
     //texture shader for grid, olaf
@@ -199,26 +200,26 @@ int main(int argc, char*argv[])
     
     
     //shadow depth map
-//    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-//        unsigned int depthMapFBO;
-//        glGenFramebuffers(1, &depthMapFBO);
-//        // create depth texture
-//
-//        glGenTextures(1, &depthMap);
-//        glBindTexture(GL_TEXTURE_2D, depthMap);
-//        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-//        float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-//        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-//        // attach depth texture as FBO's depth buffer
-//        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-//        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
-//        glDrawBuffer(GL_NONE);
-//        glReadBuffer(GL_NONE);
-//        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+        unsigned int depthMapFBO;
+        glGenFramebuffers(1, &depthMapFBO);
+        // create depth texture
+
+        glGenTextures(1, &depthMap);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        // attach depth texture as FBO's depth buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     
     
@@ -226,9 +227,8 @@ int main(int argc, char*argv[])
     
     //textures
             glUseProgram(textureShader);
-            glUniform1i(glGetUniformLocation(textureShader, "textureSampler"), 0);
-            glUniform1i(glGetUniformLocation(textureShader, "shadowMap"), 1);
-            glUniform1i(glGetUniformLocation(textureShader, "shinyHatSampler"), 2);
+            glUniform1i(glGetUniformLocation(textureShader, "shadowMap"), 0);
+  
     
 
 
@@ -290,13 +290,53 @@ int main(int argc, char*argv[])
             //set lightColor for textureShader
             GLuint lightColor = glGetUniformLocation(textureShader, "lightColor");
             glUniform3f(lightColor, 1.0f,1.0f,1.0f);
+            
+            mat4 lightProjection, lightView , lightSpaceMatrix;
+
+                    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+                    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+                    glClear(GL_DEPTH_BUFFER_BIT);
+
+
+                     //this part is largely inspired by learnopengl's shadow tutorial and lab 8
+                    //render shadows from lights perspective
+                      float near_plane = 1.0f, far_plane = 100.0f;
+
+            
+                      lightProjection = glm::perspective(glm::radians(130.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
+                      
+
+                      lightView = glm::lookAt(lightpos, glm::vec3(0.0f), glm::vec3(0.0, 0.0, 1.0));
+                      lightSpaceMatrix = lightProjection * lightView;
+                      // render scene from light's point of view
+                      glUseProgram(simpleShadow);
+                      GLuint lightSpaceMatrixSimple = glGetUniformLocation(simpleShadow, "lightSpaceMatrix");
+                      glUniformMatrix4fv(lightSpaceMatrixSimple, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
+
+                      renderTerrain(VAO,simpleShadow, nIndices, cameraPosition);
+
+                      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                      // reset viewport
+                      glViewport(0, 0, 1024, 768);
+                      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+                      glViewport(0, 0, 1024, 768);
+                      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                       //use textureshader to render the scene, and set the  boolean in the fragment shader to render wit shadows, if shadows aren't enabled then do it without
+                    glUseProgram(textureShader);
+                    glUniform1ui(glGetUniformLocation(textureShader, "shadowsOn"), 1);
+                    GLuint lightSpaceMatrixShader = glGetUniformLocation(textureShader, "lightSpaceMatrix");
+                    glUniformMatrix4fv(lightSpaceMatrixShader, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
+            
 
             
 
             renderTerrain(VAO,textureShader, nIndices, cameraPosition);
             
 
-           
+        
             
             
                       
@@ -347,12 +387,14 @@ int main(int argc, char*argv[])
             if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // camera zoom in
                           {
                               cameraPosition.z -= currentCameraSpeed * dt*40;
+             
                               
                           }
                                             
                       if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // camera zoom out
                           {
                               cameraPosition.z += currentCameraSpeed * dt*40;
+                           
                           }
             
             
@@ -360,12 +402,14 @@ int main(int argc, char*argv[])
             if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ) // move camera to the left
                 {
                     cameraPosition.x -= currentCameraSpeed * dt*40;
+
                     
                 }
 
             if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // move camera to the right
                 {
                     cameraPosition.x += currentCameraSpeed * dt*40;
+         
                 }
             
             if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) // camera zoom in
@@ -381,11 +425,13 @@ int main(int argc, char*argv[])
             if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) // move camera down
                 {
                     cameraPosition.y -= currentCameraSpeed * dt*40;
+         
                 }
 
             if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) // move camera up
                 {
                     cameraPosition.y += currentCameraSpeed * dt*40;
+               
                 }
            
   
@@ -487,7 +533,7 @@ int main(int argc, char*argv[])
          
         }
 
-        
+   
         // Shutdown GLFW
         glfwTerminate();
         
@@ -522,7 +568,7 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset, GLuint &shad
     vector<float> colors;
     vector <int> indices(6 * (mapY - 1) * (mapY - 1));
 
-            GLuint color = glGetUniformLocation(shader, "color");
+  
 
      
      float amp  = 1;
@@ -585,15 +631,15 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset, GLuint &shad
 
    // Get the vertices of each triangle in mesh
    // For each group of indices
-   for (int i = 0; i < indices.size(); i += 3) {
+   for (int i = 0; i < vertices.size(); i += 3) {
 
        // Get the vertices (point) for each index
        for (int j = 0; j < 3; j++) {
-           pos = indices[i+j]*3;
+           pos = vertices[i+j]*3;
            verts.push_back(glm::vec3(vertices[pos], vertices[pos+1], vertices[pos+2]));
        }
 
-       // Get vectors of two edges of triangle
+//        Get vectors of two edges of triangle
        glm::vec3 U = verts[i+1] - verts[i];
        glm::vec3 V = verts[i+2] - verts[i];
 
@@ -603,6 +649,8 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset, GLuint &shad
        normals.push_back(normal.y);
        normals.push_back(normal.z);
    }
+
+ 
    
 
     
@@ -657,7 +705,10 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
     
  glUseProgram(shader);
     GLuint modelViewProjection_terrain = glGetUniformLocation(shader, "mvp");
-       GLuint colors = glGetUniformLocation(shader, "mvp");
+    glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, depthMap);
+    
+    
 
  
 
