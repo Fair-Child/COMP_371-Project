@@ -94,17 +94,42 @@ float shadowCalculationNoTexture(vec4 fragPosLightSpace)
 
 void main()
 {
+                      vec3 result;
+                        float ambientStrength = 0.6;
+                       vec3 ambient = ambientStrength * lightColor;
+               
+                       //diffuse
+                       vec3 norm = normalize(Normal);
+                       vec3 lightDirection = normalize(lightPos - FragPos);
+                       float diff = max(dot(norm, lightDirection), 0.0f);
+                       vec3 diffuse = diff * lightColor;
+               
+                       float specularStrength = 0.9;
+                       vec3 viewDir = normalize(viewPos - FragPos);
+                       vec3 reflectDir = reflect(-lightDirection, norm);
+                       float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64);
+                       vec3 specular = specularStrength * spec * lightColor;
+                       result = (ambient  + diffuse + specular);
+    
+    
+    
     
     if(FragPos.y <= 1) {
-        FragColor = vec4(0.39f,0.65f,0.77f,1.0f); //water
+        vec3 waterColor = vec3(0.39f,0.65f,0.77f);
+        
+        FragColor = vec4(waterColor * result,1.0f); //water
     } else if (FragPos.y >= 1 && FragPos.y <=5.5){
-        FragColor = vec4(0.86f,0.70f,0.30f,1.0f); //sand
+        vec3 sandColor = vec3(0.86f,0.70f,0.30f);
+        FragColor = vec4(sandColor* result,1.0f); //sand
     } else if (FragPos.y >= 5.5 && FragPos.y <=17.5){
-        FragColor = vec4(0.35f,0.56f,0.30f,1.0f);
+        vec3 grassColor =vec3(0.35f,0.56f,0.30f);
+        FragColor = vec4(grassColor* result,1.0f); //grass
        }else if (FragPos.y >= 17.5 && FragPos.y <=26.5){
-        FragColor = vec4(0.75f,0.53f,0.4f,0.36f);
+           vec3 rockColor = vec3(0.75f,0.53f,0.4f);
+        FragColor = vec4(rockColor* result,1.0f); //rock
        } else {
-           FragColor = vec4(1.0f);
+           vec3 snowColor = vec3(1.0f);
+           FragColor = vec4(snowColor* result,1.0f); //snow
        }
         
     
