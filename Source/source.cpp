@@ -51,6 +51,7 @@ float Remap (float value, float from1, float to1, float from2, float to2);
 //this is not used right now
 bool textureOn = true;
 bool shadowsOn = true;
+bool updateMap = false;
 vec3 lightpos (149.0f, 38.0f,151.0f);
 
 
@@ -87,7 +88,7 @@ vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
 
 
-
+void createMap();
 void renderTerrain(vector <GLuint> &VAO , const GLuint &shader,  int &nIndices,vec3 &cameraPosition);
 void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset);
 
@@ -101,7 +102,7 @@ int xMapChunks = 10;
 int yMapChunks = 10;
 int mapX = 64;
 int mapY = 64;
-
+int nIndices = mapX * mapY * 6;
 
 
 //noise options (would love to make this user definable with a GUI ...a boy can dream
@@ -277,19 +278,25 @@ int main(int argc, char*argv[])
     
     
     
-    int nIndices = mapX * mapY * 6;
+    //create map but for ask for input variables for noise
     
-    for (int y = 0; y < yMapChunks; y++){
-        for (int x = 0; x < xMapChunks; x++) {
-            createTerrianGeometry(VAO[x + y*xMapChunks], x, y);
-            
-        }
-    }
+
+    
+//    createMap();
+   
     
     
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
     {
+        
+        if(!updateMap) {
+            createMap();
+            updateMap = !updateMap;
+        }
+        
+    
+        
         
         float dt = glfwGetTime() - lastFrameTime;
         lastFrameTime += dt;
@@ -314,8 +321,8 @@ int main(int argc, char*argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         
-        
-        
+
+
         //texture shader
         glUseProgram(textureShader);
         
@@ -405,7 +412,6 @@ int main(int argc, char*argv[])
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glDepthMask(GL_TRUE);
-        
         
         
         
@@ -643,6 +649,9 @@ int main(int argc, char*argv[])
             WorldTransformMatrix = mat4(1.0f);
         }
         
+        
+        
+        
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
         
@@ -668,18 +677,30 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
     if (key == GLFW_KEY_X && action == GLFW_PRESS)
         textureOn = !textureOn;
-    
-    if (key == GLFW_KEY_B && action == GLFW_PRESS)
-        shadowsOn = !shadowsOn;
-    
+        
     
     if (key == GLFW_KEY_I && action == GLFW_PRESS)
-        octaves += 1;
-    
+    { octaves += 1;
+    updateMap = !updateMap;
+    }
+
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
-        octaves -= 1;
+    { octaves -= 1;
+         updateMap = !updateMap;
+    }
     if (key == GLFW_KEY_B && action == GLFW_PRESS)
         textureOn = !textureOn;
+
+
+     if (key == GLFW_KEY_J && action == GLFW_PRESS)
+     { meshHeight += 1;
+     updateMap = !updateMap;
+     }
+
+     if (key == GLFW_KEY_K && action == GLFW_PRESS)
+     { meshHeight -= 1;
+          updateMap = !updateMap;
+     }
     
 }
 
@@ -688,7 +709,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 
 void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
-    vector<float> normals;
     vector<float> vertices;
     vector <int> indices(6 * (mapY - 1) * (mapY - 1));
     vector<float> textureCoords;
@@ -839,8 +859,8 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
             
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
             
-            
-            glBindVertexArray(0);
+         
+              glBindVertexArray(0);
             
             
             
@@ -855,3 +875,18 @@ float Remap (float value, float from1, float to1, float from2, float to2)
 {
     return (value - from1) / ((to1 - from1) * (to2 - from2) + from2);
 }
+
+
+void createMap() {
+    
+      for (int y = 0; y < yMapChunks; y++){
+          for (int x = 0; x < xMapChunks; x++) {
+              createTerrianGeometry(VAO[x + y*xMapChunks], x, y);
+              
+          }
+      }
+}
+
+
+
+
