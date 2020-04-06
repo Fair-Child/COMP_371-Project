@@ -6,8 +6,7 @@
 #version 330 core
 
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aNormal;
-layout (location = 2) in vec2 aUV;
+layout (location = 1) in vec2 aUV;
 
 
 uniform mat4 mvp;
@@ -34,10 +33,10 @@ void main()
     
     
     
-    
+    //calculate normals here
     vec4 pos1 = vec4(aPos, 1.0);
     POS = (mvp * pos1 ).xyz - eyes;
-    Normal = mat3(transpose(inverse(mvp))) * aNormal;
+
     vertexUV = aUV;
     FragPos = vec3(mvp * vec4(aPos,1.0f));
     FragPosLightSpace = lightSpaceMatrix * vec4(FragPos,1.0f);

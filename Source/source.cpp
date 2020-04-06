@@ -776,10 +776,10 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
     
     
     
-    GLuint VBO[3], EBO;
+    GLuint VBO[2], EBO;
     
     // VAO and VBO generateion
-    glGenBuffers(3, VBO);
+    glGenBuffers(2, VBO);
     glGenBuffers(1, &EBO);
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -801,8 +801,8 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
     //texture coordinates
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(float), &textureCoords[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
     
     
     
