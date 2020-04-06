@@ -8,6 +8,12 @@
 // - https://learnopengl.com/Advanced-OpenGL/Advanced-GLSL (for shader class)
 // - http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
 // - texutres from textures.com
+// - https://www.enkisoftware.com/devlogpost-20150131-1-Normal-generation-in-the-pixel-shader fragshader calculate normal
+//- thinmatrix for chunk terrain stuff
+//- learnopengl for cube maps sky box
+//- https://ronvalstar.nl/creating-tileable-noise-maps tips for how we made our noise work in the for loop part
+// - sky box image from https://opengameart.org/content/sky-box-sunny-day
+// biome color inspiration https://forum.unity.com/threads/random-biome-generation.512970/
 
 //SimeplexNoise is a library https://github.com/SRombauts/SimplexNoise
 //It created by Sébastien Rombauts
