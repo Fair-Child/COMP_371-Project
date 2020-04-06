@@ -461,6 +461,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // camera zoom in
         {
             cameraPosition.z -= currentCameraSpeed * dt*40;
+               lightpos.z -= currentCameraSpeed * dt*40;
             
             
         }
@@ -468,6 +469,8 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // camera zoom out
         {
             cameraPosition.z += currentCameraSpeed * dt*40;
+               lightpos.z += currentCameraSpeed * dt*40;
+            
             
         }
         
@@ -476,6 +479,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ) // move camera to the left
         {
             cameraPosition.x -= currentCameraSpeed * dt*40;
+              lightpos.x -= currentCameraSpeed * dt*40;
             
             
         }
@@ -483,6 +487,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // move camera to the right
         {
             cameraPosition.x += currentCameraSpeed * dt*40;
+             lightpos.x += currentCameraSpeed * dt*40;
             
         }
         
@@ -499,12 +504,14 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) // move camera down
         {
             cameraPosition.y -= currentCameraSpeed * dt*40;
+             lightpos.y -= currentCameraSpeed * dt*40;
             
         }
         
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) // move camera up
         {
             cameraPosition.y += currentCameraSpeed * dt*40;
+             lightpos.y += currentCameraSpeed * dt*40;
             
         }
         
@@ -521,7 +528,6 @@ int main(int argc, char*argv[])
             float xTrans = 0.1;
             xTrans = xTrans + 0.001f;
             lightpos.x -= xTrans;
-            
         }
         
         if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) // move camera up
@@ -529,7 +535,6 @@ int main(int argc, char*argv[])
             float yTrans = 0.1;
             yTrans = yTrans + 0.001f;
             lightpos.y += yTrans;
-            
         }
         
         if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) // move camera up
@@ -539,20 +544,19 @@ int main(int argc, char*argv[])
             lightpos.y -= yTrans;
         }
         
-        
         if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) // move camera up
         {
             
             float zTrans = 0.1;
             zTrans = zTrans + 0.001f;
-            lightpos.z += zTrans;
+            lightpos.z += zTrans ;
         }
         
         if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) // move camera up
         {
             float zTrans = 0.1;
             zTrans = zTrans + 0.001f;
-            lightpos.z += zTrans;
+            lightpos.z -= zTrans;
             
         }
         
