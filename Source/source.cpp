@@ -172,12 +172,12 @@ int main(int argc, char*argv[])
     
     //texture shader for grid, olaf
     
-    GLuint textureShader = Shader(FileSystem::getPath("Source/shader-texture.vs").c_str(),FileSystem::getPath("Source/shader-texture.fs").c_str());
+    GLuint textureShader = Shader(FileSystem::getPath("Source/shader-texture.vs"),FileSystem::getPath("Source/shader-texture.fs"));
     
-    GLuint skyBoxShader = Shader(FileSystem::getPath("Source/skyBoxShader.vs").c_str(),FileSystem::getPath("Source/skyBoxShader.fs").c_str());
+    GLuint skyBoxShader = Shader(FileSystem::getPath("Source/skyBoxShader.vs"), FileSystem::getPath("Source/skyBoxShader.fs"));
     
     //shader for simple shadows
-    GLuint simpleShadow = Shader(FileSystem::getPath("Source/simple-shadow-shader.vs").c_str(),FileSystem::getPath("Source/simple-shadow-shader.fs").c_str());
+    GLuint simpleShadow = Shader(FileSystem::getPath("Source/simple-shadow-shader.vs"),FileSystem::getPath("Source/simple-shadow-shader.fs"));
     
     
     //skybox VAO and VBO
@@ -194,12 +194,12 @@ int main(int argc, char*argv[])
     
     vector<std::string> faces
     {
-        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Right.bmp").c_str(),
-        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Left.bmp").c_str(),
-        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Top.bmp").c_str(),
-        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Bottom.bmp").c_str(),
-        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Front.bmp").c_str(),
-        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Back.bmp").c_str(),
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Right.bmp"),
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Left.bmp"),
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Top.bmp"),
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Bottom.bmp"),
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Front.bmp"),
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Back.bmp"),
     };
     
     
