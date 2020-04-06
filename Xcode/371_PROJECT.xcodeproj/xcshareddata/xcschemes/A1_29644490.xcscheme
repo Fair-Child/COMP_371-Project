@@ -50,6 +50,13 @@
             ReferencedContainer = "container:371_PROJECT.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "LOGL_ROOT_PATH"
+            value = "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

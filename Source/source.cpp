@@ -34,6 +34,7 @@
 #include <vector>
 #include "texture-loader.h"
 #include "SimplexNoise.h"
+#include "filesystem.h"
 
 
 
@@ -166,22 +167,16 @@ int main(int argc, char*argv[])
     glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
     glViewport(0, 0, screenWidth, screenHeight);
     
-    
-    
-    
-    
-    //    GLuint lamp_Shader = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/lampShader.vs","/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/lampShader.fs");
-    
+
     
     //texture shader for grid, olaf
     
-    GLuint textureShader = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/shader-texture.vs","/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/shader-texture.fs");
+    GLuint textureShader = Shader(FileSystem::getPath("Source/shader-texture.vs").c_str(),FileSystem::getPath("Source/shader-texture.fs").c_str());
     
-    GLuint skyBoxShader = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/skyBoxShader.vs","/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Source/skyBoxShader.fs");
-    
+    GLuint skyBoxShader = Shader(FileSystem::getPath("Source/skyBoxShader.vs").c_str(),FileSystem::getPath("Source/skyBoxShader.fs").c_str());
     
     //shader for simple shadows
-    GLuint simpleShadow = Shader("/Users/matthew/Documents/school/WINTER 2020/COMP 371/assignments/A1_29644490/Assignment1_Framework/Source/simple-shadow-shader.vs", "/Users/matthew/Documents/school/WINTER 2020/COMP 371/assignments/A1_29644490/Assignment1_Framework/Source/simple-shadow-shader.fs");
+    GLuint simpleShadow = Shader(FileSystem::getPath("Source/simple-shadow-shader.vs").c_str(),FileSystem::getPath("Source/simple-shadow-shader.fs").c_str());
     
     
     //skybox VAO and VBO
@@ -198,12 +193,12 @@ int main(int argc, char*argv[])
     
     vector<std::string> faces
     {
-        "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Right.bmp",
-        "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Left.bmp",
-        "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Top.bmp",
-        "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Bottom.bmp",
-        "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Front.bmp",
-        "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/skyBoxTextures/Daylight Box_Back.bmp"
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Right.bmp").c_str(),
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Left.bmp").c_str(),
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Top.bmp").c_str(),
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Bottom.bmp").c_str(),
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Front.bmp").c_str(),
+        FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Back.bmp").c_str(),
     };
     
     
@@ -215,11 +210,11 @@ int main(int argc, char*argv[])
     
     //load textures
     
-    snowTextureID = loadTexture("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/Textures/snowtexture3.jpg");
-    rockTextureID = loadTexture("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/Textures/rockyTexture.jpg");
-    sandTextureID = loadTexture("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/Textures/sandyTexture.jpg");
-    grassTextureID = loadTexture("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/Textures/grassTexture1.jpg");
-    waterTextureID = loadTexture("/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT/Xcode/Textures/waterTexture.jpg");
+    snowTextureID = loadTexture(FileSystem::getPath("Xcode/Textures/snowtexture3.jpg").c_str());
+    rockTextureID = loadTexture(FileSystem::getPath("Xcode/Textures/rockyTexture.jpg").c_str());
+    sandTextureID = loadTexture(FileSystem::getPath("Xcode/Textures/sandyTexture.jpg").c_str());
+    grassTextureID = loadTexture(FileSystem::getPath("Xcode/Textures/grassTexture1.jpg").c_str());
+    waterTextureID = loadTexture(FileSystem::getPath("Xcode/Textures/waterTexture.jpg").c_str());
     
     
     
@@ -301,6 +296,8 @@ int main(int argc, char*argv[])
         bool fastCam = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
         float currentCameraSpeed = (fastCam) ? cameraFastSpeed : cameraSpeed;
         
+        int mac_width, mac_height;
+        glfwGetFramebufferSize(window, &mac_width, &mac_height);
         
         
         projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,300.0f);
@@ -370,11 +367,11 @@ int main(int argc, char*argv[])
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // reset viewport
-        glViewport(0, 0, 1024, 768);
+        glViewport(0, 0, mac_width, mac_height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         
-        glViewport(0, 0, 1024, 768);
+        glViewport(0, 0, mac_width, mac_height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         //use textureshader to render the scene, and set the  boolean in the fragment shader to render wit shadows, if shadows aren't enabled then do it without
@@ -461,7 +458,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // camera zoom in
         {
             cameraPosition.z -= currentCameraSpeed * dt*40;
-               lightpos.z -= currentCameraSpeed * dt*40;
+            lightpos.z -= currentCameraSpeed * dt*40;
             
             
         }
@@ -469,7 +466,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // camera zoom out
         {
             cameraPosition.z += currentCameraSpeed * dt*40;
-               lightpos.z += currentCameraSpeed * dt*40;
+            lightpos.z += currentCameraSpeed * dt*40;
             
             
         }
@@ -479,7 +476,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ) // move camera to the left
         {
             cameraPosition.x -= currentCameraSpeed * dt*40;
-              lightpos.x -= currentCameraSpeed * dt*40;
+            lightpos.x -= currentCameraSpeed * dt*40;
             
             
         }
@@ -487,7 +484,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // move camera to the right
         {
             cameraPosition.x += currentCameraSpeed * dt*40;
-             lightpos.x += currentCameraSpeed * dt*40;
+            lightpos.x += currentCameraSpeed * dt*40;
             
         }
         
@@ -504,14 +501,14 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) // move camera down
         {
             cameraPosition.y -= currentCameraSpeed * dt*40;
-             lightpos.y -= currentCameraSpeed * dt*40;
+            lightpos.y -= currentCameraSpeed * dt*40;
             
         }
         
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) // move camera up
         {
             cameraPosition.y += currentCameraSpeed * dt*40;
-             lightpos.y += currentCameraSpeed * dt*40;
+            lightpos.y += currentCameraSpeed * dt*40;
             
         }
         
