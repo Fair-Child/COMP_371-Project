@@ -16,7 +16,7 @@
 		34DCF3862414714300E0609F /* libfreeimage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34DCF3852414714300E0609F /* libfreeimage.a */; };
 		34FD69FB243937F8004BCE18 /* SimplexNoise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34FD69F1243937F8004BCE18 /* SimplexNoise.cpp */; };
 		34FD69FC243937F8004BCE18 /* source.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34FD69F8243937F8004BCE18 /* source.cpp */; };
-		537BBD12243CA4A700C57BF5 /* libassimp.5.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 537BBD11243CA4A700C57BF5 /* libassimp.5.0.0.dylib */; };
+		538F416E243CBB8100B247D4 /* libassimp.5.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 538F416D243CBB8100B247D4 /* libassimp.5.0.0.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -58,12 +58,12 @@
 		34FD69FD243A4E56004BCE18 /* skyBoxShader.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = skyBoxShader.fs; sourceTree = "<group>"; };
 		34FD69FE243A4E66004BCE18 /* skyBoxShader.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = skyBoxShader.vs; sourceTree = "<group>"; };
 		34FD69FF243A50D6004BCE18 /* skyBoxTextures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = skyBoxTextures; sourceTree = "<group>"; };
-		537BBD11243CA4A700C57BF5 /* libassimp.5.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libassimp.5.0.0.dylib; path = ../../../../../../usr/local/Cellar/assimp/5.0.1/lib/libassimp.5.0.0.dylib; sourceTree = "<group>"; };
 		537BBD15243CAC4400C57BF5 /* Objects */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Objects; sourceTree = "<group>"; };
 		538C960D243B942A006CC597 /* filesystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = filesystem.h; sourceTree = "<group>"; };
 		538C967E243C1BB3006CC597 /* mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = "<group>"; };
 		538C967F243C1BD1006CC597 /* model.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = model.h; sourceTree = "<group>"; };
 		538C9683243C1DCA006CC597 /* assimp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assimp; path = ../ThirdParty/assimp; sourceTree = "<group>"; };
+		538F416D243CBB8100B247D4 /* libassimp.5.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libassimp.5.0.0.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,9 +71,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				537BBD12243CA4A700C57BF5 /* libassimp.5.0.0.dylib in Frameworks */,
 				0333752422AEEB3000887DBC /* libglfw3.a in Frameworks */,
 				038B791E1A6FF3EB00111E36 /* IOKit.framework in Frameworks */,
+				538F416E243CBB8100B247D4 /* libassimp.5.0.0.dylib in Frameworks */,
 				038B791A1A6FF39000111E36 /* CoreVideo.framework in Frameworks */,
 				34DCF3862414714300E0609F /* libfreeimage.a in Frameworks */,
 				03DA72D222B02FC5009C7A21 /* libGLEW.a in Frameworks */,
@@ -159,7 +159,7 @@
 		538C9680243C1D5D006CC597 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				537BBD11243CA4A700C57BF5 /* libassimp.5.0.0.dylib */,
+				538F416D243CBB8100B247D4 /* libassimp.5.0.0.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
