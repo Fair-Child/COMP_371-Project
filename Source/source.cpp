@@ -29,12 +29,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/common.hpp>
 #include "vertices.h"
-#include "Shader.h"
+#include "shader.h"
 #include <time.h>
 #include <vector>
 #include "texture-loader.h"
 #include "SimplexNoise.h"
 #include "filesystem.h"
+#include "model.h"
 
 
 
@@ -89,7 +90,7 @@ vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
 
 void createMap();
-void renderTerrain(vector <GLuint> &VAO , const GLuint &shader,  int &nIndices,vec3 &cameraPosition);
+void renderTerrain(vector <GLuint> &VAO , Shader &shader,  int &nIndices,vec3 &cameraPosition, Model m);
 void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset);
 
 
@@ -168,16 +169,16 @@ int main(int argc, char*argv[])
     glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
     glViewport(0, 0, screenWidth, screenHeight);
     
-
+    
     
     //texture shader for grid, olaf
     
-    GLuint textureShader = Shader(FileSystem::getPath("Source/shader-texture.vs"),FileSystem::getPath("Source/shader-texture.fs"));
+    Shader textureShader("/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/shader-texture.vs","/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/shader-texture.fs");
+    Shader skyBoxShader("/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/skyBoxShader.vs","/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/skyBoxShader.fs");
+    Shader simpleShadow("/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/simple-shadow-shader.vs","/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/simple-shadow-shader.fs");
     
-    GLuint skyBoxShader = Shader(FileSystem::getPath("Source/skyBoxShader.vs"), FileSystem::getPath("Source/skyBoxShader.fs"));
     
-    //shader for simple shadows
-    GLuint simpleShadow = Shader(FileSystem::getPath("Source/simple-shadow-shader.vs"),FileSystem::getPath("Source/simple-shadow-shader.fs"));
+    
     
     
     //skybox VAO and VBO
@@ -205,17 +206,18 @@ int main(int argc, char*argv[])
     
     
     GLuint cubemapTexture = loadCubemap(faces);
-    glUseProgram(skyBoxShader);
-    glUniform1i(glGetUniformLocation(skyBoxShader, "skybox"), 0);
+    skyBoxShader.use();
+    //    glUseProgram(skyBoxShader);
+    //    glUniform1i(glGetUniformLocation(skyBoxShader, "skybox"), 0);
     
     
     //load textures
     
-    snowTextureID = loadTexture(FileSystem::getPath("Xcode/Textures/snowtexture3.jpg").c_str());
-    rockTextureID = loadTexture(FileSystem::getPath("Xcode/Textures/rockyTexture.jpg").c_str());
-    sandTextureID = loadTexture(FileSystem::getPath("Xcode/Textures/sandyTexture.jpg").c_str());
-    grassTextureID = loadTexture(FileSystem::getPath("Xcode/Textures/grassTexture1.jpg").c_str());
-    waterTextureID = loadTexture(FileSystem::getPath("Xcode/Textures/waterTexture.jpg").c_str());
+    snowTextureID = TextureFromFile("snowtexture3.jpg", "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Textures");
+    rockTextureID = TextureFromFile("rockyTexture.jpg", "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Textures");
+    sandTextureID = TextureFromFile("sandyTexture.jpg", "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Textures");
+    grassTextureID = TextureFromFile("grassTexture1.jpg", "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Textures");
+    waterTextureID = TextureFromFile("waterTexture.jpg", "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Textures");
     
     
     
@@ -264,38 +266,32 @@ int main(int argc, char*argv[])
     
     
     
+    // textures
+    textureShader.use();
+    textureShader.setInt("shadowMap", 0);
+    textureShader.setInt("snowTexture", 1);
+    textureShader.setInt("sandyTexture", 2);
+    textureShader.setInt("rockyTexture", 3);
+    textureShader.setInt("grassTexture", 4);
+    textureShader.setInt("waterTexture", 5);
     
     
-    //textures
-    glUseProgram(textureShader);
-    glUniform1i(glGetUniformLocation(textureShader, "shadowMap"), 0);
-    glUniform1i(glGetUniformLocation(textureShader, "snowTexture"), 1);
-    glUniform1i(glGetUniformLocation(textureShader, "sandyTexture"), 2);
-    glUniform1i(glGetUniformLocation(textureShader, "rockyTexture"), 3);
-    glUniform1i(glGetUniformLocation(textureShader, "grassTexture"), 4);
-    glUniform1i(glGetUniformLocation(textureShader, "waterTexture"), 5);
-    
-    
-    
-    
-    //create map but for ask for input variables for noise
+    // Create a test object:
+    string test_path = "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Objects/nanosuit/nanosuit.obj";
+    Model testModel(test_path);
     
 
-    
-//    createMap();
-   
-    
-    
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
     {
         
-        if(!updateMap) {
+        if(!updateMap)
+        {
             createMap();
             updateMap = !updateMap;
         }
         
-    
+        
         
         
         float dt = glfwGetTime() - lastFrameTime;
@@ -321,31 +317,33 @@ int main(int argc, char*argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         
-
-
+        
+        
         //texture shader
-        glUseProgram(textureShader);
+        //        glUseProgram(textureShader);
+        textureShader.use();
         
         //set view and projection materix in shader
-        GLuint viewMatrix_texture = glGetUniformLocation(textureShader, "view");
-        GLuint projectionMatrix_texture = glGetUniformLocation(textureShader, "projection");
-        GLuint normalLook = glGetUniformLocation(textureShader, "eyes");
+        GLuint viewMatrix_texture = glGetUniformLocation(textureShader.ID, "view");
+        glUniformMatrix4fv(viewMatrix_texture, 1, GL_FALSE, &viewMatrix[0][0]);
+        
+        GLuint projectionMatrix_texture = glGetUniformLocation(textureShader.ID, "projection");
+        glUniformMatrix4fv(projectionMatrix_texture, 1, GL_FALSE, &projectionMatrix[0][0]);
+        
+        GLuint normalLook = glGetUniformLocation(textureShader.ID, "eyes");
         glUniform3f(normalLook, cameraPosition.x,cameraPosition.y,cameraPosition.z);
         
         
-        glUniformMatrix4fv(viewMatrix_texture, 1, GL_FALSE, &viewMatrix[0][0]);
-        glUniformMatrix4fv(projectionMatrix_texture, 1, GL_FALSE, &projectionMatrix[0][0]);
         
         
-        
-        //            //set light and view position
-        GLuint lightPositionTexture = glGetUniformLocation(textureShader, "lightPos");
-        GLuint viewPositionTexture = glGetUniformLocation(textureShader, "viewPos");
+        // set light and view position
+        GLuint lightPositionTexture = glGetUniformLocation(textureShader.ID, "lightPos");
+        GLuint viewPositionTexture = glGetUniformLocation(textureShader.ID, "viewPos");
         glUniform3f(lightPositionTexture, lightpos.x,lightpos.y,lightpos.z);
         glUniform3f(viewPositionTexture, cameraPosition.x,cameraPosition.y,cameraPosition.z);
         
         //set lightColor for textureShader
-        GLuint lightColor = glGetUniformLocation(textureShader, "lightColor");
+        GLuint lightColor = glGetUniformLocation(textureShader.ID, "lightColor");
         glUniform3f(lightColor, 1.0f,1.0f,1.0f);
         
         mat4 lightProjection, lightView , lightSpaceMatrix;
@@ -366,11 +364,11 @@ int main(int argc, char*argv[])
         lightView = glm::lookAt(lightpos, glm::vec3(0.0f), glm::vec3(0.0, 0.0, 1.0));
         lightSpaceMatrix = lightProjection * lightView;
         // render scene from light's point of view
-        glUseProgram(simpleShadow);
-        GLuint lightSpaceMatrixSimple = glGetUniformLocation(simpleShadow, "lightSpaceMatrix");
+        simpleShadow.use();
+        GLuint lightSpaceMatrixSimple = glGetUniformLocation(simpleShadow.ID, "lightSpaceMatrix");
         glUniformMatrix4fv(lightSpaceMatrixSimple, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
         
-        renderTerrain(VAO,simpleShadow, nIndices, cameraPosition);
+        renderTerrain(VAO, simpleShadow, nIndices, cameraPosition, testModel);
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // reset viewport
@@ -382,26 +380,29 @@ int main(int argc, char*argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         //use textureshader to render the scene, and set the  boolean in the fragment shader to render wit shadows, if shadows aren't enabled then do it without
-        glUseProgram(textureShader);
-        GLuint lightSpaceMatrixShader = glGetUniformLocation(textureShader, "lightSpaceMatrix");
+        textureShader.use();
+        GLuint lightSpaceMatrixShader = glGetUniformLocation(textureShader.ID, "lightSpaceMatrix");
         glUniformMatrix4fv(lightSpaceMatrixShader, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
         
         
-        glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 1);
+        //        glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 1);
+        textureShader.setBool("textureOn", true);
         
         if(textureOn) {
-            glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 1);
+            //            glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 1);
+            textureShader.setBool("textureOn", true);
         } else {
-            glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 0);
+            //            glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 0);
+            textureShader.setBool("textureOn", false);
         }
         
         
-        renderTerrain(VAO,textureShader, nIndices, cameraPosition);
+        renderTerrain(VAO, textureShader, nIndices, cameraPosition, testModel);
         
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-        glUseProgram(skyBoxShader);
-        GLuint skyBoxViewMatrix = glGetUniformLocation(skyBoxShader, "view");
-        GLuint skyBoxProjectionMatrix = glGetUniformLocation(skyBoxShader, "projection");
+        skyBoxShader.use();
+        GLuint skyBoxViewMatrix = glGetUniformLocation(skyBoxShader.ID, "view");
+        GLuint skyBoxProjectionMatrix = glGetUniformLocation(skyBoxShader.ID, "projection");
         mat4 view = mat4(mat3(viewMatrix));
         glUniformMatrix4fv(skyBoxViewMatrix, 1, GL_FALSE, &view[0][0]);
         glUniformMatrix4fv(skyBoxProjectionMatrix, 1, GL_FALSE, &projectionMatrix[0][0]);
@@ -423,8 +424,8 @@ int main(int argc, char*argv[])
         glfwPollEvents();
         
         
-        //this part here which controls the camera via the mouse X,Y inputs
-        //it is edited and adapted from my solution to lab 4
+        // this part here which controls the camera via the mouse X,Y inputs
+        // it is edited and adapted from my solution to lab 4
         double mousePosX, mousePosY;
         glfwGetCursorPos(window, &mousePosX, &mousePosY);
         
@@ -619,7 +620,6 @@ int main(int argc, char*argv[])
         
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) //rotate Y axis of the world
         {
-            
             float x =5.01;
             float y=5.01;
             float z=5.01;
@@ -632,7 +632,6 @@ int main(int argc, char*argv[])
         
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) // rotate Y axis of the world in the other orientation
         {
-            
             float x =5.01;
             float y=5.01;
             float z=5.01;
@@ -644,18 +643,13 @@ int main(int argc, char*argv[])
         
         if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) // reset world orientation to original settings
         {
-            
-            
             WorldTransformMatrix = mat4(1.0f);
         }
         
         
-        
-        
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
-        
-        
+    
         
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
         projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,600.0f);
@@ -677,30 +671,30 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
     if (key == GLFW_KEY_X && action == GLFW_PRESS)
         textureOn = !textureOn;
-        
+    
     
     if (key == GLFW_KEY_I && action == GLFW_PRESS)
     { octaves += 1;
-    updateMap = !updateMap;
+        updateMap = !updateMap;
     }
-
+    
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
     { octaves -= 1;
-         updateMap = !updateMap;
+        updateMap = !updateMap;
     }
     if (key == GLFW_KEY_B && action == GLFW_PRESS)
         textureOn = !textureOn;
-
-
-     if (key == GLFW_KEY_J && action == GLFW_PRESS)
-     { meshHeight += 1;
-     updateMap = !updateMap;
-     }
-
-     if (key == GLFW_KEY_K && action == GLFW_PRESS)
-     { meshHeight -= 1;
-          updateMap = !updateMap;
-     }
+    
+    
+    if (key == GLFW_KEY_J && action == GLFW_PRESS)
+    { meshHeight += 1;
+        updateMap = !updateMap;
+    }
+    
+    if (key == GLFW_KEY_K && action == GLFW_PRESS)
+    { meshHeight -= 1;
+        updateMap = !updateMap;
+    }
     
 }
 
@@ -804,22 +798,15 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     
-    
-    
-    
-    
-    
 }
 
 
 
 
-void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, vec3 &cameraPosition) {
+void renderTerrain(vector <GLuint> &VAO, Shader &shader,  int &nIndices, vec3 &cameraPosition, Model testModel) {
     
-    
-    
-    glUseProgram(shader);
-    GLuint modelViewProjection_terrain = glGetUniformLocation(shader, "mvp");
+    shader.use();
+    GLuint modelViewProjection_terrain = glGetUniformLocation(shader.ID, "mvp");
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthMap);
     
@@ -828,20 +815,15 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
     
     glActiveTexture(GL_TEXTURE0 + 2);
     glBindTexture(GL_TEXTURE_2D, sandTextureID);
-    //
+    
     glActiveTexture(GL_TEXTURE0 + 3);
     glBindTexture(GL_TEXTURE_2D, rockTextureID);
     
     glActiveTexture(GL_TEXTURE0 + 4);
     glBindTexture(GL_TEXTURE_2D, grassTextureID);
-    //
+    
     glActiveTexture(GL_TEXTURE0+ 5);
     glBindTexture(GL_TEXTURE_2D, waterTextureID);
-    
-    
-    
-    
-    
     
     for (int y = 0; y < yMapChunks; y++)
         for (int x = 0; x < xMapChunks; x++) {
@@ -849,24 +831,25 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
             mat4 mvp = glm::mat4(1.0f);
             mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapY / 2.0 + (mapY - 1) * y));
             
-            
-            
             glUniformMatrix4fv(modelViewProjection_terrain, 1, GL_FALSE, &mvp[0][0]);
-            
-            
             
             glBindVertexArray(VAO[x + y*xMapChunks]);
             
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
             
-         
-              glBindVertexArray(0);
+            glBindVertexArray(0);
             
             
-            
+//            testModel.Draw(shader);
         }
     
-    
+    // render the loaded model
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 15.0f));
+    model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
+//    shader.setVec3("vertexColor", 0.4f, 0.4f, 0.2f);
+    shader.setMat4("mvp", model);
+    testModel.Draw(shader);
     
 }
 
@@ -877,14 +860,15 @@ float Remap (float value, float from1, float to1, float from2, float to2)
 }
 
 
-void createMap() {
-    
-      for (int y = 0; y < yMapChunks; y++){
-          for (int x = 0; x < xMapChunks; x++) {
-              createTerrianGeometry(VAO[x + y*xMapChunks], x, y);
-              
-          }
-      }
+void createMap()
+{
+    for (int y = 0; y < yMapChunks; y++)
+    {
+        for (int x = 0; x < xMapChunks; x++)
+        {
+            createTerrianGeometry(VAO[x + y*xMapChunks], x, y);
+        }
+    }
 }
 
 

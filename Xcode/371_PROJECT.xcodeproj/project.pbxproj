@@ -16,6 +16,7 @@
 		34DCF3862414714300E0609F /* libfreeimage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34DCF3852414714300E0609F /* libfreeimage.a */; };
 		34FD69FB243937F8004BCE18 /* SimplexNoise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34FD69F1243937F8004BCE18 /* SimplexNoise.cpp */; };
 		34FD69FC243937F8004BCE18 /* source.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34FD69F8243937F8004BCE18 /* source.cpp */; };
+		537BBD12243CA4A700C57BF5 /* libassimp.5.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 537BBD11243CA4A700C57BF5 /* libassimp.5.0.0.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -45,7 +46,7 @@
 		34FD69EF243937F8004BCE18 /* lampShader.fs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = lampShader.fs; sourceTree = "<group>"; };
 		34FD69F0243937F8004BCE18 /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		34FD69F1243937F8004BCE18 /* SimplexNoise.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimplexNoise.cpp; sourceTree = "<group>"; };
-		34FD69F2243937F8004BCE18 /* Shader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Shader.h; sourceTree = "<group>"; };
+		34FD69F2243937F8004BCE18 /* shader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader.h; sourceTree = "<group>"; };
 		34FD69F3243937F8004BCE18 /* texture-loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "texture-loader.h"; sourceTree = "<group>"; };
 		34FD69F4243937F8004BCE18 /* shader-texture.vs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = "shader-texture.vs"; sourceTree = "<group>"; };
 		34FD69F5243937F8004BCE18 /* lampShader.vs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = lampShader.vs; sourceTree = "<group>"; };
@@ -57,7 +58,12 @@
 		34FD69FD243A4E56004BCE18 /* skyBoxShader.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = skyBoxShader.fs; sourceTree = "<group>"; };
 		34FD69FE243A4E66004BCE18 /* skyBoxShader.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = skyBoxShader.vs; sourceTree = "<group>"; };
 		34FD69FF243A50D6004BCE18 /* skyBoxTextures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = skyBoxTextures; sourceTree = "<group>"; };
+		537BBD11243CA4A700C57BF5 /* libassimp.5.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libassimp.5.0.0.dylib; path = ../../../../../../usr/local/Cellar/assimp/5.0.1/lib/libassimp.5.0.0.dylib; sourceTree = "<group>"; };
+		537BBD15243CAC4400C57BF5 /* Objects */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Objects; sourceTree = "<group>"; };
 		538C960D243B942A006CC597 /* filesystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = filesystem.h; sourceTree = "<group>"; };
+		538C967E243C1BB3006CC597 /* mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = "<group>"; };
+		538C967F243C1BD1006CC597 /* model.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = model.h; sourceTree = "<group>"; };
+		538C9683243C1DCA006CC597 /* assimp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assimp; path = ../ThirdParty/assimp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				537BBD12243CA4A700C57BF5 /* libassimp.5.0.0.dylib in Frameworks */,
 				0333752422AEEB3000887DBC /* libglfw3.a in Frameworks */,
 				038B791E1A6FF3EB00111E36 /* IOKit.framework in Frameworks */,
 				038B791A1A6FF39000111E36 /* CoreVideo.framework in Frameworks */,
@@ -81,6 +88,7 @@
 		034F0BB11A700D0F0028E1BA /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				538C9683243C1DCA006CC597 /* assimp */,
 				03DA72D122B02FC5009C7A21 /* libGLEW.a */,
 				0333752322AEEB3000887DBC /* libglfw3.a */,
 				038B791D1A6FF3EB00111E36 /* IOKit.framework */,
@@ -95,6 +103,7 @@
 		034F0BB31A7010160028E1BA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				537BBD15243CAC4400C57BF5 /* Objects */,
 				34FD69FF243A50D6004BCE18 /* skyBoxTextures */,
 				34B0E96D23FF4D5B00550100 /* Textures */,
 			);
@@ -109,6 +118,7 @@
 				034F0BB31A7010160028E1BA /* Resources */,
 				034F0BB11A700D0F0028E1BA /* Linked Frameworks */,
 				0371ABCC1A6EAF2E00029CF8 /* Products */,
+				538C9680243C1D5D006CC597 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -129,7 +139,7 @@
 				34FD69F5243937F8004BCE18 /* lampShader.vs */,
 				34FD69F6243937F8004BCE18 /* shader-texture.fs */,
 				34FD69F4243937F8004BCE18 /* shader-texture.vs */,
-				34FD69F2243937F8004BCE18 /* Shader.h */,
+				34FD69F2243937F8004BCE18 /* shader.h */,
 				34FD69EE243937F8004BCE18 /* simple-shadow-shader.fs */,
 				34FD69F9243937F8004BCE18 /* simple-shadow-shader.vs */,
 				34FD69F1243937F8004BCE18 /* SimplexNoise.cpp */,
@@ -139,9 +149,19 @@
 				34FD69F3243937F8004BCE18 /* texture-loader.h */,
 				34FD69FA243937F8004BCE18 /* vertices.h */,
 				538C960D243B942A006CC597 /* filesystem.h */,
+				538C967E243C1BB3006CC597 /* mesh.h */,
+				538C967F243C1BD1006CC597 /* model.h */,
 			);
 			name = Source;
 			path = ../Source;
+			sourceTree = "<group>";
+		};
+		538C9680243C1D5D006CC597 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				537BBD11243CA4A700C57BF5 /* libassimp.5.0.0.dylib */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -330,6 +350,7 @@
 					"../ThirdParty/glfw-3.3/lib/osx",
 					"../ThirdParty/FreeImage-3170/lib/osx",
 					"$(PROJECT_DIR)",
+					/usr/local/Cellar/assimp/5.0.1/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -353,6 +374,7 @@
 					"../ThirdParty/glfw-3.3/lib/osx",
 					"../ThirdParty/FreeImage-3170/lib/osx",
 					"$(PROJECT_DIR)",
+					/usr/local/Cellar/assimp/5.0.1/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

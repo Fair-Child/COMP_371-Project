@@ -54,12 +54,12 @@
          <EnvironmentVariable
             key = "LOGL_ROOT_PATH"
             value = "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "LOGL_ROOT_PATH"
             value = "/Users/matthew/Documents/school/WINTER 2020/COMP 371/371_PROJECT"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </EnvironmentVariable>
       </EnvironmentVariables>
    </LaunchAction>

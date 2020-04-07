@@ -28,7 +28,7 @@ uniform sampler2D shadowMap;
 
 
 uniform vec3 color;
-uniform  bool textureOn;
+uniform bool textureOn;
 uniform bool shadowsOn;
 
 
