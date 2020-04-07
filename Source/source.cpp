@@ -61,7 +61,8 @@ bool shadowsOn = true;
 bool updateMap = false;
 vec3 lightpos (149.0f, 38.0f,151.0f);
 
-
+double lastTime2 = glfwGetTime();
+ int nbFrames = 0;
 
 //worldspace matrix
 
@@ -421,7 +422,17 @@ int main(int argc, char*argv[])
         glDepthMask(GL_TRUE);
         
         
-        
+        double currentTime2 = glfwGetTime();
+             nbFrames++;
+             if ( currentTime2 - lastTime2 >= 1.0 ){ // If last prinf() was more than 1 sec ago
+                 // printf and reset timer
+                 printf("%f ms/frame\n", 1000.0/double(nbFrames));
+                    printf("%f fps\n", double(nbFrames));
+                 nbFrames = 0;
+                 lastTime2 += 1.0;
+           
+           
+             }
         
         
         
@@ -672,6 +683,8 @@ int main(int argc, char*argv[])
     }
     
     
+  
+    
     // Shutdown GLFW
     glfwTerminate();
     
@@ -846,24 +859,24 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
     GLuint modelViewProjection_terrain = glGetUniformLocation(shader, "mvp");
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthMap);
-    
+
     glActiveTexture(GL_TEXTURE0 +  1);
     glBindTexture(GL_TEXTURE_2D, snowTextureID);
-    
+
     glActiveTexture(GL_TEXTURE0 + 2);
     glBindTexture(GL_TEXTURE_2D, sandTextureID);
     //
     glActiveTexture(GL_TEXTURE0 + 3);
     glBindTexture(GL_TEXTURE_2D, rockTextureID);
-    
+
     glActiveTexture(GL_TEXTURE0 + 4);
     glBindTexture(GL_TEXTURE_2D, grassTextureID);
     //
     glActiveTexture(GL_TEXTURE0+ 5);
     glBindTexture(GL_TEXTURE_2D, waterTextureID);
+
     
-    
-    
+ 
     
     
     
@@ -890,8 +903,7 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
             
         }
     
-    
-    
+ 
 }
 
 //helper function to map values to stay within a range
