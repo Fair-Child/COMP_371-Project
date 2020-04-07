@@ -15,6 +15,13 @@
 // - sky box image from https://opengameart.org/content/sky-box-sunny-day
 // biome color inspiration https://forum.unity.com/threads/random-biome-generation.512970/
 
+//-- these links are what i used for help understanding heightmap and noise tiling (making the noise link up at the edges!)
+// -https://pdfs.semanticscholar.org/5e95/c1c36a07a2919c3da123f17f9d408a1ea6a5.pdf
+// - http://libnoise.sourceforge.net/noisegen/index.html
+// - OpenGL Development Cookbook chapter 5
+// - chunk mapping https://en.wikibooks.org/wiki/OpenGL_Programming/Glescraft_1
+// - thinmatrix help https://www.youtube.com/watch?v=qChQrNWU9Xw&list=PLRIWtICgwaX0u7Rf9zkZhLoLuZVfUksDP&index=37
+
 //SimeplexNoise is a library https://github.com/SRombauts/SimplexNoise
 //It created by Sébastien Rombauts
 
@@ -100,8 +107,8 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset);
 int renderDistance = 10;
 int xMapChunks = 10;
 int yMapChunks = 10;
-int mapX = 64;
-int mapY = 64;
+int mapX = 128;
+int mapY = 128;
 int nIndices = mapX * mapY * 6;
 
 
@@ -723,7 +730,7 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
     //create vertices and noise
     float  rangedNoise =0;
     
-    
+ 
     
     for (int y = 0; y < mapY ; y++)
         for (int x = 0; x < mapX; x++) {
@@ -733,14 +740,31 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
             freq = 1;
             float noiseHeight = 0;
             for (int i = 0; i < octaves; i++) {
-                float xSample = (x + xOffset * (mapX-1))  / noiseScale * freq;
-                float ySample = (y + yOffset * (mapY-1)) / noiseScale * freq;
                 
+                //jagged mode
+//                float xSample = (x + xOffset * (mapX-1))  / noiseScale * freq;
+//                float ySample = (y + yOffset * (mapY-1)) / noiseScale * freq;
+              
+                
+                //more tame jagged
+                float xSample = (xOffset * (mapX-1) + x-1)  / noiseScale * freq;
+                float ySample = (yOffset * (mapY-1) + y-1) / noiseScale * freq;
+               
+                //smooth mode
+//                float xSample = (xOffset * (mapX-1) + x-1)  / noiseScale;
+//                float ySample = (yOffset * (mapX-1) + y-1) / noiseScale;
+                
+                //block world mode
+//                float xSample = (xOffset * (mapX-1) + x-1)  / 32;
+//                float ySample = (yOffset * (mapX-1) + y-1) / 32;
+                
+       
                 
                 
                 
                 float perlinValue = SimplexNoise::noise(xSample,ySample);
                 noiseHeight += perlinValue * amp;
+
                 
                 amp  *= persistence;
                 freq *= lacunarity;
