@@ -6,11 +6,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "../ThirdParty/assimp/Importer.hpp"
-//#include <assimp/Importer.hpp>
 #include "../ThirdParty/assimp/scene.h"
-//#include <assimp/scene.h>
 #include "../ThirdParty/assimp/postprocess.h"
-//#include <assimp/postprocess.h>
 
 
 #include "mesh.h"

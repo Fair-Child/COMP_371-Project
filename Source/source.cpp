@@ -173,12 +173,9 @@ int main(int argc, char*argv[])
     
     //texture shader for grid, olaf
     
-    Shader textureShader("/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/shader-texture.vs","/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/shader-texture.fs");
-    Shader skyBoxShader("/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/skyBoxShader.vs","/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/skyBoxShader.fs");
-    Shader simpleShadow("/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/simple-shadow-shader.vs","/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Source/simple-shadow-shader.fs");
-    
-    
-    
+    Shader textureShader(FileSystem::getPath("Source/shader-texture.vs").c_str(),FileSystem::getPath("Source/shader-texture.fs").c_str());
+    Shader skyBoxShader(FileSystem::getPath("Source/skyBoxShader.vs").c_str(),FileSystem::getPath("Source/skyBoxShader.fs").c_str());
+    Shader simpleShadow(FileSystem::getPath("Source/simple-shadow-shader.vs").c_str(),FileSystem::getPath("Source/simple-shadow-shader.fs").c_str());
     
     
     //skybox VAO and VBO
@@ -212,12 +209,11 @@ int main(int argc, char*argv[])
     
     
     //load textures
-    
-    snowTextureID = TextureFromFile("snowtexture3.jpg", "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Textures");
-    rockTextureID = TextureFromFile("rockyTexture.jpg", "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Textures");
-    sandTextureID = TextureFromFile("sandyTexture.jpg", "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Textures");
-    grassTextureID = TextureFromFile("grassTexture1.jpg", "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Textures");
-    waterTextureID = TextureFromFile("waterTexture.jpg", "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Textures");
+    snowTextureID = TextureFromFile("snowtexture3.jpg", FileSystem::getPath("Xcode/Textures"));
+    rockTextureID = TextureFromFile("rockyTexture.jpg", FileSystem::getPath("Xcode/Textures"));
+    sandTextureID = TextureFromFile("sandyTexture.jpg", FileSystem::getPath("Xcode/Textures"));
+    grassTextureID = TextureFromFile("grassTexture1.jpg", FileSystem::getPath("Xcode/Textures"));
+    waterTextureID = TextureFromFile("waterTexture.jpg", FileSystem::getPath("Xcode/Textures"));
     
     
     
@@ -277,7 +273,7 @@ int main(int argc, char*argv[])
     
     
     // Create a test object:
-    string test_path = "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Objects/nanosuit/nanosuit.obj";
+    string test_path = FileSystem::getPath("Xcode/Objects/nanosuit/nanosuit.obj");
     Model testModel(test_path);
     
 

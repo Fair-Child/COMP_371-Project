@@ -26,101 +26,101 @@ struct lamp
 {
     lamp(vec3 _position, vec3 _normal)
     : position(_position), normal(_normal) {}
-   
-      vec3 position;
-     
-      vec3 normal;
+    
+    vec3 position;
+    
+    vec3 normal;
 };
 
- unsigned int numOfVerticeslightCube;
+unsigned int numOfVerticeslightCube;
 
 static const lamp lightcube[] = {
-       lamp(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f,  0.0f, -1.0f)), //left - red
-       lamp(vec3(-0.5f,-0.5f, 0.5f),  vec3(0.0f,  0.0f, -1.0f)),
-       lamp(vec3(-0.5f, 0.5f, 0.5f),  vec3(0.0f,  0.0f, -1.0f)),
-       lamp(vec3(-0.5f,-0.5f,-0.5f),  vec3(0.0f,  0.0f, -1.0f)),
-       lamp(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f,  0.0f, -1.0f)),
-       lamp(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f,  0.0f, -1.0f)),
-       
-       lamp(vec3( 0.5f, 0.5f,-0.5f), vec3(0.0f,  0.0f,  1.0f)), // far - blue
-       lamp(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f,  0.0f,  1.0f)),
-       lamp(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f,  0.0f,  1.0f)),
-       lamp(vec3( 0.5f, 0.5f,-0.5f),  vec3(0.0f,  0.0f,  1.0f)),
-       lamp(vec3( 0.5f,-0.5f,-0.5f),  vec3(0.0f,  0.0f,  1.0f)),
-       lamp(vec3(-0.5f,-0.5f,-0.5f),  vec3(0.0f,  0.0f,  1.0f)),
-       
-       lamp(vec3( 0.5f,-0.5f, 0.5f),  vec3(-1.0f,  0.0f,  0.0f)), // bottom - turquoise
-       lamp(vec3(-0.5f,-0.5f,-0.5f),  vec3(-1.0f,  0.0f,  0.0f)),
-       lamp(vec3( 0.5f,-0.5f,-0.5f),  vec3(-1.0f,  0.0f,  0.0f)),
-       lamp(vec3( 0.5f,-0.5f, 0.5f),  vec3(-1.0f,  0.0f,  0.0f)),
-       lamp(vec3(-0.5f,-0.5f, 0.5f),  vec3(-1.0f,  0.0f,  0.0f)),
-       lamp(vec3(-0.5f,-0.5f,-0.5f),  vec3(-1.0f,  0.0f,  0.0f)),
-       
-       lamp(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f,  0.0f,  0.0f)), // near - green
-       lamp(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f,  0.0f,  0.0f)),
-       lamp(vec3( 0.5f,-0.5f, 0.5f),  vec3(1.0f,  0.0f,  0.0f)),
-       lamp(vec3( 0.5f, 0.5f, 0.5f),  vec3(1.0f,  0.0f,  0.0f)),
-       lamp(vec3(-0.5f, 0.5f, 0.5f),  vec3(1.0f,  0.0f,  0.0f)),
-       lamp(vec3( 0.5f,-0.5f, 0.5f),  vec3(1.0f,  0.0f,  0.0f)),
-       
-       lamp(vec3( 0.5f, 0.5f, 0.5f),  vec3(0.0f, -1.0f,  0.0f)), // right - purple
-       lamp(vec3( 0.5f,-0.5f,-0.5f),   vec3(0.0f, -1.0f,  0.0f)),
-       lamp(vec3( 0.5f, 0.5f,-0.5f),  vec3(0.0f, -1.0f,  0.0f)),
-       lamp(vec3( 0.5f,-0.5f,-0.5f),   vec3(0.0f, -1.0f,  0.0f)),
-       lamp(vec3( 0.5f, 0.5f, 0.5f),   vec3(0.0f, -1.0f,  0.0f)),
-       lamp(vec3( 0.5f,-0.5f, 0.5f),   vec3(0.0f, -1.0f,  0.0f)),
-       
-       lamp(vec3( 0.5f, 0.5f, 0.5f),  vec3(0.0f,  1.0f,  0.0f)), // top - yellow
-       lamp(vec3( 0.5f, 0.5f,-0.5f),  vec3(0.0f,  1.0f,  0.0f)),
-       lamp(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f,  1.0f,  0.0f)),
-       lamp(vec3( 0.5f, 0.5f, 0.5f), vec3(0.0f,  1.0f,  0.0f)),
-       lamp(vec3(-0.5f, 0.5f,-0.5f),  vec3(0.0f,  1.0f,  0.0f)),
-       lamp(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f,  1.0f,  0.0f))
-   
+    lamp(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f,  0.0f, -1.0f)), //left - red
+    lamp(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f,  0.0f, -1.0f)),
+    lamp(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f,  0.0f, -1.0f)),
+    lamp(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f,  0.0f, -1.0f)),
+    lamp(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f,  0.0f, -1.0f)),
+    lamp(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f,  0.0f, -1.0f)),
+    
+    lamp(vec3( 0.5f, 0.5f,-0.5f), vec3(0.0f,  0.0f,  1.0f)), // far - blue
+    lamp(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f,  0.0f,  1.0f)),
+    lamp(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f,  0.0f,  1.0f)),
+    lamp(vec3( 0.5f, 0.5f,-0.5f), vec3(0.0f,  0.0f,  1.0f)),
+    lamp(vec3( 0.5f,-0.5f,-0.5f), vec3(0.0f,  0.0f,  1.0f)),
+    lamp(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f,  0.0f,  1.0f)),
 
-  };
+    lamp(vec3( 0.5f,-0.5f, 0.5f), vec3(-1.0f,  0.0f,  0.0f)), // bottom - turquoise
+    lamp(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f,  0.0f,  0.0f)),
+    lamp(vec3( 0.5f,-0.5f,-0.5f), vec3(-1.0f,  0.0f,  0.0f)),
+    lamp(vec3( 0.5f,-0.5f, 0.5f), vec3(-1.0f,  0.0f,  0.0f)),
+    lamp(vec3(-0.5f,-0.5f, 0.5f), vec3(-1.0f,  0.0f,  0.0f)),
+    lamp(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f,  0.0f,  0.0f)),
+    
+    lamp(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f,  0.0f,  0.0f)), // near - green
+    lamp(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f,  0.0f,  0.0f)),
+    lamp(vec3( 0.5f,-0.5f, 0.5f), vec3(1.0f,  0.0f,  0.0f)),
+    lamp(vec3( 0.5f, 0.5f, 0.5f), vec3(1.0f,  0.0f,  0.0f)),
+    lamp(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f,  0.0f,  0.0f)),
+    lamp(vec3( 0.5f,-0.5f, 0.5f), vec3(1.0f,  0.0f,  0.0f)),
+
+    lamp(vec3( 0.5f, 0.5f, 0.5f), vec3(0.0f, -1.0f,  0.0f)), // right - purple
+    lamp(vec3( 0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f,  0.0f)),
+    lamp(vec3( 0.5f, 0.5f,-0.5f), vec3(0.0f, -1.0f,  0.0f)),
+    lamp(vec3( 0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f,  0.0f)),
+    lamp(vec3( 0.5f, 0.5f, 0.5f), vec3(0.0f, -1.0f,  0.0f)),
+    lamp(vec3( 0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f,  0.0f)),
+
+    lamp(vec3( 0.5f, 0.5f, 0.5f), vec3(0.0f,  1.0f,  0.0f)), // top - yellow
+    lamp(vec3( 0.5f, 0.5f,-0.5f), vec3(0.0f,  1.0f,  0.0f)),
+    lamp(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f,  1.0f,  0.0f)),
+    lamp(vec3( 0.5f, 0.5f, 0.5f), vec3(0.0f,  1.0f,  0.0f)),
+    lamp(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f,  1.0f,  0.0f)),
+    lamp(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f,  1.0f,  0.0f))
+    
+    
+};
 
 float skyboxVertices[] = {
     // positions
     -1.0f,  1.0f, -1.0f,
     -1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f,  1.0f, -1.0f,
+    1.0f, -1.0f, -1.0f,
+    1.0f, -1.0f, -1.0f,
+    1.0f,  1.0f, -1.0f,
     -1.0f,  1.0f, -1.0f,
-
+    
     -1.0f, -1.0f,  1.0f,
     -1.0f, -1.0f, -1.0f,
     -1.0f,  1.0f, -1.0f,
     -1.0f,  1.0f, -1.0f,
     -1.0f,  1.0f,  1.0f,
     -1.0f, -1.0f,  1.0f,
-
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-
+    
+    1.0f, -1.0f, -1.0f,
+    1.0f, -1.0f,  1.0f,
+    1.0f,  1.0f,  1.0f,
+    1.0f,  1.0f,  1.0f,
+    1.0f,  1.0f, -1.0f,
+    1.0f, -1.0f, -1.0f,
+    
     -1.0f, -1.0f,  1.0f,
     -1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f,
+    1.0f,  1.0f,  1.0f,
+    1.0f,  1.0f,  1.0f,
+    1.0f, -1.0f,  1.0f,
     -1.0f, -1.0f,  1.0f,
-
+    
     -1.0f,  1.0f, -1.0f,
-     1.0f,  1.0f, -1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
+    1.0f,  1.0f, -1.0f,
+    1.0f,  1.0f,  1.0f,
+    1.0f,  1.0f,  1.0f,
     -1.0f,  1.0f,  1.0f,
     -1.0f,  1.0f, -1.0f,
-
+    
     -1.0f, -1.0f, -1.0f,
     -1.0f, -1.0f,  1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
+    1.0f, -1.0f, -1.0f,
+    1.0f, -1.0f, -1.0f,
     -1.0f, -1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f
+    1.0f, -1.0f,  1.0f
 };
