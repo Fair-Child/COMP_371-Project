@@ -75,6 +75,7 @@ GLuint sandTextureID;
 GLuint grassTextureID;
 GLuint waterTextureID;
 vector<GLuint> VAO(100);
+vector<GLuint> treeVAO(100);
 
 //primatative rendering options
 int primativeRender = GL_TRIANGLES;
@@ -273,10 +274,10 @@ int main(int argc, char*argv[])
     
     
     // Create a test object:
-    string test_path = FileSystem::getPath("Xcode/Objects/nanosuit/nanosuit.obj");
+    string test_path = "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Objects/lowpolytree/Lowpoly_tree_sample.obj";
     Model testModel(test_path);
     
-
+    
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
     {
@@ -645,10 +646,10 @@ int main(int argc, char*argv[])
         
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
-    
+        
         
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
-        projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,600.0f);
+        projectionMatrix = perspective(radians(fovAngle), 1024.0f / 768.0f, 0.1f,600.0f);
         
         
         
@@ -703,17 +704,11 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
     vector <int> indices(6 * (mapY - 1) * (mapY - 1));
     vector<float> textureCoords;
     
-    
-    
-    
     float amp  = 1;
     float freq = 1;
     
-    
     //create vertices and noise
     float  rangedNoise =0;
-    
-    
     
     for (int y = 0; y < mapY ; y++)
         for (int x = 0; x < mapX; x++) {
@@ -725,9 +720,6 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
             for (int i = 0; i < octaves; i++) {
                 float xSample = (x + xOffset * (mapX-1))  / noiseScale * freq;
                 float ySample = (y + yOffset * (mapY-1)) / noiseScale * freq;
-                
-                
-                
                 
                 float perlinValue = SimplexNoise::noise(xSample,ySample);
                 noiseHeight += perlinValue * amp;
@@ -742,9 +734,6 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
             vertices.push_back(y);
             textureCoords.push_back(y);
         }
-    
-    
-    
     
     int pointer = 0;
     for(int y = 0; y < mapY - 1; y++) {
@@ -833,19 +822,33 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader,  int &nIndices, vec3 &c
             
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
             
+            
+            // draw the trees
+            //            mvp = mat4(1.0f);
+            //            mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapY / 2.0 + (mapY - 1) * y));
+            //            mvp = scale(mvp, vec3(1.0f, 1.0f, 1.0f));
+            //            shader.setMat4("mvp", mvp);
+            //            glBindVertexArray(VAO[x + y*xMapChunks]);
+            //            testModel.Draw(shader);
+            
+            
+            
             glBindVertexArray(0);
             
-            
-//            testModel.Draw(shader);
+            // render the loaded model
+            //            glm::mat4 model = glm::mat4(1.0f);
+            //            model = glm::translate(model, glm::vec3(0.0f, 0.0f, 15.0f));
+            //            model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+            //            shader.setMat4("mvp", model);
+            //            testModel.Draw(shader);
+            //            testModel.Draw(shader);
         }
-    
-    // render the loaded model
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 15.0f));
-    model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
-//    shader.setVec3("vertexColor", 0.4f, 0.4f, 0.2f);
+    mat4 model = mat4(1.0f);
+    model = translate(model, vec3(0.0f, 0.0f, 0.0f));
+    model = scale(model, vec3(3.0f, 3.0f, 3.0f));
     shader.setMat4("mvp", model);
     testModel.Draw(shader);
+    
     
 }
 
