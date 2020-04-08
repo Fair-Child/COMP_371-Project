@@ -81,7 +81,7 @@ void main()
          vec3 Normal = normalize( cross( dFdx( flatFragPos.xyz ), dFdy( flatFragPos.xyz ) ) );
         float shadow = shadowCalculation(flatFragPosLightSpace);
       
-        float ambientStrength = 0.5;
+        float ambientStrength = 0.9;
         vec3 ambient = ambientStrength * lightColor;
         
         //diffuse
