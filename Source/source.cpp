@@ -764,16 +764,16 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset) {
                 
                 
                 //more tame jagged
-//                float xSample = (xOffset * (mapX-1) + x-1)  / noiseScale * freq;
-//                float zSample = (zOffset * (mapZ-1) + z-1) / noiseScale * freq;
+                float xSample = (xOffset * (mapX-1) + x-1)  / noiseScale * freq;
+                float zSample = (zOffset * (mapZ-1) + z-1) / noiseScale * freq;
 //
                 //smooth mode
 //                                float xSample = (xOffset * (mapX-1) + x-1)  / noiseScale;
 //                                float zSample = (zOffset * (mapZ-1) + z-1) / noiseScale;
                 
                 //block world mode
-                                float xSample = (xOffset * (mapX-1) + x-1)  / 32;
-                                float zSample = (zOffset * (mapZ-1) + z-1) / 32;
+//                                float xSample = (xOffset * (mapX-1) + x-1)  / 32;
+//                                float zSample = (zOffset * (mapZ-1) + z-1) / 32;
                 
                 
                 
