@@ -13,6 +13,12 @@
 		038B791A1A6FF39000111E36 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 038B79191A6FF39000111E36 /* CoreVideo.framework */; };
 		038B791E1A6FF3EB00111E36 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 038B791D1A6FF3EB00111E36 /* IOKit.framework */; };
 		03DA72D222B02FC5009C7A21 /* libGLEW.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 03DA72D122B02FC5009C7A21 /* libGLEW.a */; };
+		3416305A243DE17D00794B98 /* imgui_impl_opengl3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34163053243DE17C00794B98 /* imgui_impl_opengl3.cpp */; };
+		3416305B243DE17D00794B98 /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3416304C243DE17C00794B98 /* imgui_draw.cpp */; };
+		3416305C243DE17D00794B98 /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34163050243DE17C00794B98 /* imgui_demo.cpp */; };
+		3416305D243DE17D00794B98 /* imgui_impl_glfw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34163057243DE17D00794B98 /* imgui_impl_glfw.cpp */; };
+		3416305E243DE17D00794B98 /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34163055243DE17C00794B98 /* imgui.cpp */; };
+		3416305F243DE17D00794B98 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34163051243DE17C00794B98 /* imgui_widgets.cpp */; };
 		34DCF3862414714300E0609F /* libfreeimage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34DCF3852414714300E0609F /* libfreeimage.a */; };
 		34FD69FB243937F8004BCE18 /* SimplexNoise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34FD69F1243937F8004BCE18 /* SimplexNoise.cpp */; };
 		34FD69FC243937F8004BCE18 /* source.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34FD69F8243937F8004BCE18 /* source.cpp */; };
@@ -39,6 +45,20 @@
 		038B791B1A6FF3D100111E36 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		038B791D1A6FF3EB00111E36 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		03DA72D122B02FC5009C7A21 /* libGLEW.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libGLEW.a; path = "../ThirdParty/glew-2.1.0/lib/osx/libGLEW.a"; sourceTree = "<group>"; };
+		3416304C243DE17C00794B98 /* imgui_draw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_draw.cpp; sourceTree = "<group>"; };
+		3416304D243DE17C00794B98 /* imstb_textedit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imstb_textedit.h; sourceTree = "<group>"; };
+		3416304E243DE17C00794B98 /* imstb_truetype.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imstb_truetype.h; sourceTree = "<group>"; };
+		3416304F243DE17C00794B98 /* imgui_impl_opengl3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_opengl3.h; sourceTree = "<group>"; };
+		34163050243DE17C00794B98 /* imgui_demo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_demo.cpp; sourceTree = "<group>"; };
+		34163051243DE17C00794B98 /* imgui_widgets.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_widgets.cpp; sourceTree = "<group>"; };
+		34163052243DE17C00794B98 /* imstb_rectpack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imstb_rectpack.h; sourceTree = "<group>"; };
+		34163053243DE17C00794B98 /* imgui_impl_opengl3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_opengl3.cpp; sourceTree = "<group>"; };
+		34163054243DE17C00794B98 /* imconfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imconfig.h; sourceTree = "<group>"; };
+		34163055243DE17C00794B98 /* imgui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui.cpp; sourceTree = "<group>"; };
+		34163056243DE17D00794B98 /* imgui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui.h; sourceTree = "<group>"; };
+		34163057243DE17D00794B98 /* imgui_impl_glfw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_glfw.cpp; sourceTree = "<group>"; };
+		34163058243DE17D00794B98 /* imgui_impl_glfw.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_glfw.h; sourceTree = "<group>"; };
+		34163059243DE17D00794B98 /* imgui_internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_internal.h; sourceTree = "<group>"; };
 		34B0E96D23FF4D5B00550100 /* Textures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Textures; sourceTree = "<group>"; };
 		34DCF3852414714300E0609F /* libfreeimage.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libfreeimage.a; sourceTree = "<group>"; };
 		34FD69EE243937F8004BCE18 /* simple-shadow-shader.fs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = "simple-shadow-shader.fs"; sourceTree = "<group>"; };
@@ -123,6 +143,20 @@
 		038B785E1A6EB3F500111E36 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				34163054243DE17C00794B98 /* imconfig.h */,
+				34163050243DE17C00794B98 /* imgui_demo.cpp */,
+				3416304C243DE17C00794B98 /* imgui_draw.cpp */,
+				34163057243DE17D00794B98 /* imgui_impl_glfw.cpp */,
+				34163058243DE17D00794B98 /* imgui_impl_glfw.h */,
+				34163053243DE17C00794B98 /* imgui_impl_opengl3.cpp */,
+				3416304F243DE17C00794B98 /* imgui_impl_opengl3.h */,
+				34163059243DE17D00794B98 /* imgui_internal.h */,
+				34163051243DE17C00794B98 /* imgui_widgets.cpp */,
+				34163055243DE17C00794B98 /* imgui.cpp */,
+				34163056243DE17D00794B98 /* imgui.h */,
+				34163052243DE17C00794B98 /* imstb_rectpack.h */,
+				3416304D243DE17C00794B98 /* imstb_textedit.h */,
+				3416304E243DE17C00794B98 /* imstb_truetype.h */,
 				34FD69EF243937F8004BCE18 /* lampShader.fs */,
 				34FD69FD243A4E56004BCE18 /* skyBoxShader.fs */,
 				34FD69FE243A4E66004BCE18 /* skyBoxShader.vs */,
@@ -202,7 +236,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				34FD69FC243937F8004BCE18 /* source.cpp in Sources */,
+				3416305A243DE17D00794B98 /* imgui_impl_opengl3.cpp in Sources */,
 				34FD69FB243937F8004BCE18 /* SimplexNoise.cpp in Sources */,
+				3416305F243DE17D00794B98 /* imgui_widgets.cpp in Sources */,
+				3416305C243DE17D00794B98 /* imgui_demo.cpp in Sources */,
+				3416305B243DE17D00794B98 /* imgui_draw.cpp in Sources */,
+				3416305E243DE17D00794B98 /* imgui.cpp in Sources */,
+				3416305D243DE17D00794B98 /* imgui_impl_glfw.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

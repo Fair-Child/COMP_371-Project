@@ -29,6 +29,12 @@
 
 #include <iostream>
 #include <list>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+
+
 #define GLEW_STATIC 1
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -53,10 +59,18 @@ using namespace std;
 //global variables and functions for the project
 
 
-//this is not used right now
+//bools
 bool textureOn = true;
-bool shadowsOn = true;
-bool updateMap = false;
+bool GUICONTROL = true;
+bool flatOn = false;
+bool updateMap =false;
+bool show_demo_window = true;
+
+int TerrainMode = 0;
+
+
+
+
 vec3 lightpos (149.0f, 38.0f,151.0f);
 
 double lastTime2 = glfwGetTime();
@@ -84,7 +98,7 @@ vector<GLuint> VAO(100);
 
 
 
- //params to start
+//params to start
 int xMapChunks = 10;
 int zMapChunks = 10;
 int mapX = 128;
@@ -93,7 +107,9 @@ int nIndices = mapX * mapZ * 6;
 
 //camera info
 vec3 cameraPosition(0.0f,43.0f,30.0f);
-vec3 cameraLookAt(0.0f, 0.0f, 0.0f);
+//vec3 cameraLookAt(0.0f, 0.0f, 0.0f);
+vec3 cameraLookAt (0.810638f,-0.188706f, 0.554307f);
+
 vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
 //primatative rendering options
@@ -108,6 +124,8 @@ float Remap (float value, float from1, float to1, float from2, float to2);
 void createMap();
 void renderTerrain(vector <GLuint> &VAO , const GLuint &shader,  int &nIndices,vec3 &cameraPosition);
 void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset);
+
+
 
 
 
@@ -142,6 +160,7 @@ int main(int argc, char*argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    const char* glsl_version = "#version 330";
 #else
     // On windows, we set OpenGL version to 2.1, to support more hardware
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
@@ -160,7 +179,7 @@ int main(int argc, char*argv[])
         return -1;
     }
     
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
     
@@ -285,22 +304,62 @@ int main(int argc, char*argv[])
     glUniform1i(glGetUniformLocation(textureShader, "grassTexture"), 4);
     glUniform1i(glGetUniformLocation(textureShader, "waterTexture"), 5);
     
-
+    
+    
+    
     
     //create map but for ask for input variables for noise
     
-
+    
     createMap();
     
+    //this checks for the max height so it adjusts our collision detection
     float maxHeight = *max_element(heights.begin(), heights.end());
-
     
-    cout<<maxHeight<<endl;
+    
+    
+    
+    
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsClassic();
+    
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    
+    
+    
+
+
+
+    ImGui_ImplOpenGL3_Init(glsl_version);
+    
+    
+    
     
     
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
     {
+        
+        
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        
+        if(updateMap) {
+            createMap();
+            updateMap = !updateMap;
+            cout<<TerrainMode<<endl;
+        }
+        
+        
         
         
         
@@ -395,6 +454,8 @@ int main(int argc, char*argv[])
         glUniformMatrix4fv(lightSpaceMatrixShader, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
         
         
+        //sets textures and flat shading on and off
+        
         glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 1);
         
         if(textureOn) {
@@ -402,6 +463,16 @@ int main(int argc, char*argv[])
         } else {
             glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 0);
         }
+        
+        
+        glUniform1ui(glGetUniformLocation(textureShader, "flatOn"), 0);
+        if(flatOn) {
+            glUniform1ui(glGetUniformLocation(textureShader, "flatOn"), 1);
+        } else{
+            glUniform1ui(glGetUniformLocation(textureShader, "flatOn"), 0);
+        }
+        
+        
         
         glUniform1f(glGetUniformLocation(textureShader, "newY"), xTrans);
         renderTerrain(VAO,textureShader, nIndices, cameraPosition);
@@ -443,18 +514,73 @@ int main(int argc, char*argv[])
             
             
         }
+        if (show_demo_window)
+            
+            
+            // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+        {
+          
+             
+            
+            ImGui::Begin("World Control");                          // Create a window called "Hello, world!" and append into it.
+            
+            ImGui::Text("World Control Start Up.");                         // Display some text (you can use a format strings too)
+            ImGui::Text("Please set parameters");
+            ImGui::Text("press TAB when finished");
+            
+            ImGui::SliderFloat("Terrian Height Control", &xTrans, -0.99f, .199f);
+             ImGui::Text("Sunlight Positon ");
+            ImGui::SliderFloat("X", &lightpos.x, 0.0f, 200.f);
+            ImGui::SliderFloat("Y", &lightpos.y,0.0f, 200.f);
+            ImGui::SliderFloat("Z", &lightpos.z, 0.0f, 200.0f);
+            
+            
+            if (ImGui::Button("Jagged Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+                           TerrainMode =0;
+                           updateMap =!updateMap;
+                       }
+            if (ImGui::Button("Smooth Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+                           TerrainMode =1;
+                           updateMap =!updateMap;
+                       }
+            if (ImGui::Button("Block Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+                           TerrainMode =2;
+                           updateMap =!updateMap;
+                       }
+            
+            if (ImGui::Button("Flat Shading Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+                flatOn=!flatOn;
+                                    
+                                  }
+            
+            if (ImGui::Button("Textures On/Off"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+                textureOn=!textureOn;
+              
+            }
+            
+         
+            
         
-
-
-      
+            
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
+        }
+        
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         
         // End Frame
-        glfwSwapBuffers(window);
-        glfwPollEvents();
         
         
         //this part here which controls the camera via the mouse X,Y inputs
         //it is edited and adapted from my solution to lab 4
+        
+        
+        
+        
+        
+        
+        
         double mousePosX, mousePosY;
         glfwGetCursorPos(window, &mousePosX, &mousePosY);
         
@@ -465,29 +591,35 @@ int main(int argc, char*argv[])
         lastMousePosY = mousePosY;
         
         // Convert to spherical coordinates
+        
         const float cameraAngularSpeed = 50.0f;
-        cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
-        cameraVerticalAngle   -= dy * cameraAngularSpeed * dt;
         
         
-        cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
-        if (cameraHorizontalAngle > 360)
-        {
-            cameraHorizontalAngle -= 360;
+        if(!GUICONTROL){
+            cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
+            cameraVerticalAngle   -= dy * cameraAngularSpeed * dt;
+            
+            
+            cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
+            if (cameraHorizontalAngle > 360)
+            {
+                cameraHorizontalAngle -= 360;
+            }
+            else if (cameraHorizontalAngle < -360)
+            {
+                cameraHorizontalAngle += 360;
+            }
+            
+            float theta = radians(cameraHorizontalAngle);
+            float phi = radians(cameraVerticalAngle);
+            
+            cameraLookAt = vec3(cosf(phi)*cosf(theta), sinf(phi), -cosf(phi)*sinf(theta));
+            vec3 cameraSideVector = cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
+            normalize(cameraSideVector);
+            
+            
+            
         }
-        else if (cameraHorizontalAngle < -360)
-        {
-            cameraHorizontalAngle += 360;
-        }
-        
-        float theta = radians(cameraHorizontalAngle);
-        float phi = radians(cameraVerticalAngle);
-        
-        cameraLookAt = vec3(cosf(phi)*cosf(theta), sinf(phi), -cosf(phi)*sinf(theta));
-        vec3 cameraSideVector = cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
-        normalize(cameraSideVector);
-        
-        
         
         //these are the following keybindings to control the olaf, the camera and the world orientation, textures, lighting and shadows
         
@@ -613,40 +745,6 @@ int main(int argc, char*argv[])
         
         
         
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) // rotate X axis in the other orientation of the world
-        {
-            
-            float x =5.01;
-            float y=5.01;
-            float z=5.01;
-            x+=0.01;
-            y+=0.01;
-            z+=0.01;
-            
-            WorldTransformMatrix = WorldTransformMatrix * rotate(mat4(1.0f), radians(x),vec3(-1.0f,0.f, 0.f));
-            
-            
-        }
-        
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) // rotate X axis in the other orientation of the world
-        {
-            
-            float x =5.01;
-            float y=5.01;
-            float z=5.01;
-            x+=0.01;
-            y+=0.01;
-            z+=0.01;
-            WorldTransformMatrix = WorldTransformMatrix * rotate(mat4(1.0f), radians(x),vec3(-1.0f,0.f, 0.f));
-            
-            
-            
-            
-        }
-        
-        
-        
-        
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) //rotate Y axis of the world
         {
             
@@ -654,16 +752,8 @@ int main(int argc, char*argv[])
             if(xTrans >= 0.199) {
                 xTrans = 0.199;
             }
-           
             
             
-            //            float x =5.01;
-            //            float y=5.01;
-            //            float z=5.01;
-            //            x+=0.01;
-            //            y+=0.01;
-            //            z+=0.01;
-            //            WorldTransformMatrix = WorldTransformMatrix * rotate(mat4(1.0f), radians(x),vec3(0.0f,1.f, 0.f));
         }
         
         
@@ -674,23 +764,11 @@ int main(int argc, char*argv[])
             
             if(xTrans <= -0.99) {
                 xTrans = -0.99;
-                       }
-            //            float x =5.01;
-            //            float y=5.01;
-            //            float z=5.01;
-            //            x+=0.01;
-            //            y+=0.01;
-            //            z+=0.01;
-            //            WorldTransformMatrix = WorldTransformMatrix * rotate(mat4(1.0f), radians(x),vec3(0.0f,-1.0f, 0.f));
+            }
+            
         }
         
-        if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) // reset world orientation to original settings
-        {
-            
-            
-            
-            WorldTransformMatrix = mat4(1.0f);
-        }
+        
         
         
         
@@ -703,6 +781,8 @@ int main(int argc, char*argv[])
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
         projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,600.0f);
         
+        glfwSwapBuffers(window);
+        glfwPollEvents();
         
         
     }
@@ -722,9 +802,24 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
     
     
+    if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+        flatOn = !flatOn;
+    
+    
     if (key == GLFW_KEY_B && action == GLFW_PRESS)
         textureOn = !textureOn;
     
+    if (key == GLFW_KEY_TAB && action == GLFW_PRESS){
+        if(!GUICONTROL){
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            
+        }else
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
+        GUICONTROL =!GUICONTROL;
+        show_demo_window = !show_demo_window;
+    }
     
 }
 
@@ -736,10 +831,11 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset) {
     vector<float> vertices;
     vector <int> indices(6 * (mapZ - 1) * (mapZ - 1));
     vector<float> textureCoords;
+
     
     
-    
-    
+    float xSample =0;
+    float zSample = 0;
     float amp  = 1;
     float freq = 1;
     
@@ -758,26 +854,26 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset) {
             float noiseHeight = 0;
             for (int i = 0; i < octaves; i++) {
                 
-                //jagged mode
-                //                float xSample = (x + xOffset * (mapX-1))  / noiseScale * freq;
-                //                float zSample = (z + zOffset * (mapZ-1)) / noiseScale * freq;
                 
+                //jagged
+                if(TerrainMode ==0){
+                                  xSample = (xOffset * (mapX-1) + x-1)  / noiseScale * freq;
+                                  zSample = (zOffset * (mapZ-1) + z-1) / noiseScale * freq;
+                }
+                 
+                //smooth
+                if(TerrainMode ==1) {
+                        xSample = (xOffset * (mapX-1) + x-1)  / noiseScale;
+                        zSample = (zOffset * (mapZ-1) + z-1) / noiseScale;
+                }
                 
-                //more tame jagged
-                float xSample = (xOffset * (mapX-1) + x-1)  / noiseScale * freq;
-                float zSample = (zOffset * (mapZ-1) + z-1) / noiseScale * freq;
-//
-                //smooth mode
-//                                float xSample = (xOffset * (mapX-1) + x-1)  / noiseScale;
-//                                float zSample = (zOffset * (mapZ-1) + z-1) / noiseScale;
-                
-                //block world mode
-//                                float xSample = (xOffset * (mapX-1) + x-1)  / 32;
-//                                float zSample = (zOffset * (mapZ-1) + z-1) / 32;
-                
-                
-                
-                
+                //block
+                if(TerrainMode ==2) {
+                        xSample = (xOffset * (mapX-1) + x-1)  / 32;
+                        zSample = (zOffset * (mapZ-1) + z-1) / 32;
+                }
+                     
+
                 
                 float perlinValue = SimplexNoise::noise(xSample,zSample);
                 noiseHeight += perlinValue * amp;
@@ -791,7 +887,7 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset) {
             heights.push_back(rangedNoise * meshHeight);
             vertices.push_back((rangedNoise * meshHeight));
             vertices.push_back(z);
-             textureCoords.push_back(z);
+            textureCoords.push_back(z);
             
             
         }
@@ -850,7 +946,7 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset) {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     
-    
+
     
 }
 
@@ -893,16 +989,13 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
             mat4 mvp = glm::mat4(1.0f);
             mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapZ / 2.0 + (mapZ - 1) * z));
             glUniformMatrix4fv(modelViewProjection_terrain, 1, GL_FALSE, &mvp[0][0]);
-
+            
             glBindVertexArray(VAO[x + z*xMapChunks]);
             
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);
             
-            
-            
-            
-            
+
             
             
         }
@@ -926,6 +1019,7 @@ void createMap() {
         }
     }
 }
+
 
 
 
