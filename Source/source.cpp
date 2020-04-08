@@ -892,17 +892,11 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
             
             mat4 mvp = glm::mat4(1.0f);
             mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapZ / 2.0 + (mapZ - 1) * z));
-            
-            
             glUniformMatrix4fv(modelViewProjection_terrain, 1, GL_FALSE, &mvp[0][0]);
-            
-            
-            
+
             glBindVertexArray(VAO[x + z*xMapChunks]);
             
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
-            
-            
             glBindVertexArray(0);
             
             
