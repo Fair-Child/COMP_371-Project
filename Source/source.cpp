@@ -51,8 +51,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void renderLight(const GLuint &lamp_Shader);
 float Remap (float value, float from1, float to1, float from2, float to2);
 void createMap(Model &treeModel);
-void renderTerrain(vector <GLuint> &VAO, Shader &shader, Shader &bioShader, int &nIndices, vec3 &cameraPosition, Model &testModel);
-void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeModel);
+void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &cameraPosition, Model &testModel);
+void createTerrainGeometry(GLuint &VAO, GLuint &treeVAO, int &xOffset, int &yOffset, Model &treeModel);
 
 
 //this is not used right now
@@ -81,6 +81,7 @@ GLuint sandTextureID;
 GLuint grassTextureID;
 GLuint waterTextureID;
 vector<GLuint> terrainVAOs(100);
+vector<GLuint> treeVAOs(100);
 
 //primatative rendering options
 int primativeRender = GL_TRIANGLES;
@@ -99,11 +100,11 @@ vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
 //params to start
 
-int renderDistance = 10;
-int xMapChunks = 10;
-int yMapChunks = 10;
-int mapX = 64;
-int mapY = 64;
+const int renderDistance = 10;
+const int xMapChunks = 10;
+const int yMapChunks = 10;
+const int mapX = 64;
+const int mapY = 64;
 int nIndices = mapX * mapY * 6;
 
 
@@ -177,7 +178,7 @@ int main(int argc, char*argv[])
     Shader textureShader(FileSystem::getPath("Source/shader-texture.vs").c_str(),FileSystem::getPath("Source/shader-texture.fs").c_str());
     Shader skyBoxShader(FileSystem::getPath("Source/skyBoxShader.vs").c_str(),FileSystem::getPath("Source/skyBoxShader.fs").c_str());
     Shader simpleShadow(FileSystem::getPath("Source/simple-shadow-shader.vs").c_str(),FileSystem::getPath("Source/simple-shadow-shader.fs").c_str());
-    Shader bioShader(FileSystem::getPath("Source/bioshader.vs").c_str(),FileSystem::getPath("Source/bioshader.fs").c_str());
+    //    Shader bioShader(FileSystem::getPath("Source/bioshader.vs").c_str(),FileSystem::getPath("Source/bioshader.fs").c_str());
     
     
     //skybox VAO and VBO
@@ -341,9 +342,9 @@ int main(int argc, char*argv[])
         glUniformMatrix4fv(projectionMatrix_texture, 1, GL_FALSE, &projectionMatrix[0][0]);
         
         // do the same for the bioShader
-        bioShader.use();
-        bioShader.setMat4("projection", projectionMatrix);
-        bioShader.setMat4("view", viewMatrix);
+        //        bioShader.use();
+        //        bioShader.setMat4("projection", projectionMatrix);
+        //        bioShader.setMat4("view", viewMatrix);
         
         
         textureShader.use();
@@ -385,7 +386,7 @@ int main(int argc, char*argv[])
         GLuint lightSpaceMatrixSimple = glGetUniformLocation(simpleShadow.ID, "lightSpaceMatrix");
         glUniformMatrix4fv(lightSpaceMatrixSimple, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
         
-        renderTerrain(terrainVAOs, simpleShadow, simpleShadow, nIndices, cameraPosition, treeModel);
+        renderTerrain(terrainVAOs, simpleShadow, nIndices, cameraPosition, treeModel);
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // reset viewport
@@ -412,7 +413,7 @@ int main(int argc, char*argv[])
         
         
         
-        renderTerrain(terrainVAOs, textureShader, bioShader, nIndices, cameraPosition, treeModel);
+        renderTerrain(terrainVAOs, textureShader, nIndices, cameraPosition, treeModel);
         
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyBoxShader.use();
@@ -725,7 +726,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
     vector<float> vertices;
     vector <int> indices(6 * (mapY - 1) * (mapY - 1));
     vector<float> textureCoords;
-    vector<float> bio;
+    //    vector<float> bio;
     
     float amp  = 1;
     float freq = 1;
@@ -741,7 +742,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
             freq = 1;
             float noiseHeight = 0;
             for (int i = 0; i < octaves; i++) {
-                float xSample = (x + xOffset * (mapX-1))  / noiseScale * freq;
+                float xSample = (x + xOffset * (mapX-1)) / noiseScale * freq;
                 float ySample = (y + yOffset * (mapY-1)) / noiseScale * freq;
                 
                 float perlinValue = SimplexNoise::noise(xSample,ySample);
@@ -763,30 +764,42 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
     // ------------------------------------------------------------------
     unsigned int amount = mapX * mapY;
     glm::mat4 *modelMatrices;
-    modelMatrices = new glm::mat4[amount];
+    modelMatrices = new glm::mat4[5000];
+    vector<float> vertices_copy = vertices;
+    for ( int i = 0; i < 99; i++) {
+        vertices_copy.insert(vertices_copy.end(), vertices.begin(), vertices.end());
+    }
     
-    int counter2 = 0;
-    while (counter2 < 500) {
-        int c = (rand() % (mapY * mapX)) * 3; // random number that is less than vertices.size() [12288] and divisible by 3
-        float x = vertices[c];
-        float y = vertices[c+1];
-        float z = vertices[c+2];
-
-        if (y < 5.5 || y > 17.5)    // matches Matt's numbers in the fragshader
+    int acounter = 0;
+    for (int i = 0; i <yMapChunks; i++) {
+        for (int j = 0; j < xMapChunks; j++) {
+            for (int y = 0; y < mapY; y++) {
+                for (int x = 0; x < mapX; x++) {
+                    vertices_copy[acounter] = vertices_copy[acounter] + (-mapX / 2.0 + (mapX - 1) * j);
+                    vertices_copy[acounter+2] = vertices_copy[acounter+2] + (-mapY / 2.0 + (mapY - 1) * i);
+                    acounter += 3;
+                }
+            }
+        }
+    }
+    
+    int counter = 0;
+    while (counter < 5000) {
+        int c = (rand() % (mapY * mapX * 100)) * 3; // random number that is less than vertices_copy.size() [1,228,800] and divisible by 3
+        float x = vertices_copy[c];
+        float y = vertices_copy[c+1];
+        float z = vertices_copy[c+2];
+        
+        if (y < 6.0 || y > 16.5)    // matches the grass numbers in the fragshader
             continue;
-//
-//        int xCoord = rand() % 11;
-//        int yCoord = rand() % 11;
-//
-//        model = glm::translate(model, vec3(x + (-mapX / 2.0 + (mapX - 1) * xCoord), y, z + (-mapY / 2.0 + (mapY - 1) * yCoord)));
         
         mat4 model = mat4(1.0f);
         model = glm::translate(model, vec3(x, y, z));
-        model = glm::scale(model, vec3(0.3f));
-        modelMatrices[counter2] = model;
-        counter2++;
+        model = glm::scale(model, vec3(0.2f));
+        modelMatrices[counter] = model;
+        counter++;
     }
-
+    
     
     
     // configure instanced array
@@ -820,6 +833,14 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
         
         glBindVertexArray(0);
     }
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
@@ -873,10 +894,10 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
 }
 
 
-void renderTerrain(vector <GLuint> &VAO, Shader &terrainShader, Shader &bioShader, int &nIndices, vec3 &cameraPosition, Model &testModel) {
+void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &cameraPosition, Model &testModel) {
     
-    terrainShader.use();
-    GLuint modelViewProjection_terrain = glGetUniformLocation(terrainShader.ID, "mvp");
+    shader.use();
+    GLuint modelViewProjection_terrain = glGetUniformLocation(shader.ID, "mvp");
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthMap);
     
@@ -898,35 +919,31 @@ void renderTerrain(vector <GLuint> &VAO, Shader &terrainShader, Shader &bioShade
     for (int y = 0; y < yMapChunks; y++)
         for (int x = 0; x < xMapChunks; x++) {
             
-            terrainShader.use();
+            shader.use();
+            
             mat4 mvp = mat4(1.0f);
             mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapY / 2.0 + (mapY - 1) * y));
-            
             glUniformMatrix4fv(modelViewProjection_terrain, 1, GL_FALSE, &mvp[0][0]);
+            
             glBindVertexArray(VAO[x + y*xMapChunks]);
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
-            
-            
             glBindVertexArray(0);   // reset
             
         }
     
-    // draw bio
-    bioShader.use();
-    bioShader.setInt("texture_diffuse1", 0);
-    glActiveTexture(GL_TEXTURE0);
+    
+    shader.setBool("instanceOn", true);
     if (testModel.textures_loaded.size() > 0)   // don't try to load a non-existant texture
         glBindTexture(GL_TEXTURE_2D, testModel.textures_loaded[0].id);
     
-    int numberOfObjects = 500;
+    int numberOfObjects = 5000;
     for (unsigned int i = 0; i < testModel.meshes.size(); i++)
     {
-        
         glBindVertexArray(testModel.meshes.at(i).VAO);
         glDrawElementsInstanced(GL_TRIANGLES, testModel.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, numberOfObjects);
         glBindVertexArray(0);
     }
-    
+    shader.setBool("instanceOn", false);
     
 }
 
