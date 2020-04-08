@@ -58,8 +58,6 @@
 		34FD69FD243A4E56004BCE18 /* skyBoxShader.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = skyBoxShader.fs; sourceTree = "<group>"; };
 		34FD69FE243A4E66004BCE18 /* skyBoxShader.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = skyBoxShader.vs; sourceTree = "<group>"; };
 		34FD69FF243A50D6004BCE18 /* skyBoxTextures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = skyBoxTextures; sourceTree = "<group>"; };
-		537506A5243D8F09008F4930 /* bioshader.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = bioshader.vs; sourceTree = "<group>"; };
-		537506A6243D8F14008F4930 /* bioshader.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = bioshader.fs; sourceTree = "<group>"; };
 		537BBD15243CAC4400C57BF5 /* Objects */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Objects; sourceTree = "<group>"; };
 		538C960D243B942A006CC597 /* filesystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = filesystem.h; sourceTree = "<group>"; };
 		538C967E243C1BB3006CC597 /* mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = "<group>"; };
@@ -153,8 +151,6 @@
 				538C960D243B942A006CC597 /* filesystem.h */,
 				538C967E243C1BB3006CC597 /* mesh.h */,
 				538C967F243C1BD1006CC597 /* model.h */,
-				537506A5243D8F09008F4930 /* bioshader.vs */,
-				537506A6243D8F14008F4930 /* bioshader.fs */,
 			);
 			name = Source;
 			path = ../Source;

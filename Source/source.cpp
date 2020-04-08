@@ -15,6 +15,13 @@
 // - sky box image from https://opengameart.org/content/sky-box-sunny-day
 // biome color inspiration https://forum.unity.com/threads/random-biome-generation.512970/
 
+//-- these links are what i used for help understanding heightmap and noise tiling (making the noise link up at the edges!)
+// -https://pdfs.semanticscholar.org/5e95/c1c36a07a2919c3da123f17f9d408a1ea6a5.pdf
+// - http://libnoise.sourceforge.net/noisegen/index.html
+// - DAVID WOLF openGL 4.0 shading language cookbook page 269-270
+// - chunk mapping https://en.wikibooks.org/wiki/OpenGL_Programming/Glescraft_1
+// - thinmatrix help https://www.youtube.com/watch?v=qChQrNWU9Xw&list=PLRIWtICgwaX0u7Rf9zkZhLoLuZVfUksDP&index=37
+
 //SimeplexNoise is a library https://github.com/SRombauts/SimplexNoise
 //It created by Sébastien Rombauts
 
@@ -22,6 +29,11 @@
 
 #include <iostream>
 #include <list>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+
 #define GLEW_STATIC 1
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -43,24 +55,21 @@
 using namespace glm;
 using namespace std;
 
-
-
-
-//global variables and functions for the project
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void renderLight(const GLuint &lamp_Shader);
-float Remap (float value, float from1, float to1, float from2, float to2);
-void createMap(Model &treeModel);
-void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &cameraPosition, Model &testModel);
-void createTerrainGeometry(GLuint &VAO, GLuint &treeVAO, int &xOffset, int &yOffset, Model &treeModel);
-
-
-//this is not used right now
+// bools
 bool textureOn = true;
+bool GUICONTROL = true;
+bool flatOn = false;
+bool show_demo_window = true;
 bool shadowsOn = true;
 bool updateMap = false;
+
+int TerrainMode = 0;
+
 vec3 lightpos (149.0f, 38.0f,151.0f);
 
+double lastTime2 = glfwGetTime();
+int nbFrames = 0;
+int counter =0;
 
 
 //worldspace matrix
@@ -80,32 +89,36 @@ GLuint rockTextureID;
 GLuint sandTextureID;
 GLuint grassTextureID;
 GLuint waterTextureID;
-vector<GLuint> terrainVAOs(100);
-vector<GLuint> treeVAOs(100);
+vector<GLuint> VAO(100);
+
+
+//params to start
+int xMapChunks = 10;
+int zMapChunks = 10;
+int mapX = 128;
+int mapZ = 128;
+int nIndices = mapX * mapZ * 6;
+
+//camera info
+vec3 cameraPosition(0.0f,43.0f,30.0f);
+//vec3 cameraLookAt(0.0f, 0.0f, 0.0f);
+vec3 cameraLookAt (0.810638f,-0.188706f, 0.554307f);
+
+vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
 //primatative rendering options
 int primativeRender = GL_TRIANGLES;
 
 
-//camera info
-vec3 cameraPosition(0.0f,56.0f,30.0f);
-vec3 cameraLookAt(0.0f, 0.0f, 0.0f);
-vec3 cameraUp(0.0f, 1.0f, 0.0f);
-
-//vectors that hold geomtry information
-
-
-
+//global variables and functions for the project
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void renderLight(const GLuint &lamp_Shader);
+float Remap (float value, float from1, float to1, float from2, float to2);
+void createMap(Model &treeModel);
+void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &cameraPosition, Model &testModel);
+void createTerrainGeometry(GLuint &VAO, GLuint &treeVAO, int &xOffset, int &zOffset, Model &treeModel);
 
 
-//params to start
-
-const int renderDistance = 10;
-const int xMapChunks = 10;
-const int yMapChunks = 10;
-const int mapX = 64;
-const int mapY = 64;
-int nIndices = mapX * mapY * 6;
 
 
 //noise options (would love to make this user definable with a GUI ...a boy can dream
@@ -115,7 +128,10 @@ float meshHeight = 25;  // Vertical scaling
 float noiseScale = 64;  // Horizontal scaling
 float persistence = 0.5;
 float lacunarity = 2;
+float xTrans = 0;
 
+GLuint VBO[2], EBO;
+vector  <float> heights;
 
 
 
@@ -178,7 +194,10 @@ int main(int argc, char*argv[])
     Shader textureShader(FileSystem::getPath("Source/shader-texture.vs").c_str(),FileSystem::getPath("Source/shader-texture.fs").c_str());
     Shader skyBoxShader(FileSystem::getPath("Source/skyBoxShader.vs").c_str(),FileSystem::getPath("Source/skyBoxShader.fs").c_str());
     Shader simpleShadow(FileSystem::getPath("Source/simple-shadow-shader.vs").c_str(),FileSystem::getPath("Source/simple-shadow-shader.fs").c_str());
-    //    Shader bioShader(FileSystem::getPath("Source/bioshader.vs").c_str(),FileSystem::getPath("Source/bioshader.fs").c_str());
+
+    //this allows us to send an out from the vertex shader to our feedback buffer
+    const GLchar* feedbackVaryings[] = { "calPos" };
+    glTransformFeedbackVaryings(textureShader, 1, feedbackVaryings, GL_INTERLEAVED_ATTRIBS);
     
     
     //skybox VAO and VBO
@@ -274,19 +293,31 @@ int main(int argc, char*argv[])
     textureShader.setInt("grassTexture", 4);
     textureShader.setInt("waterTexture", 5);
     
+    //create map but for ask for input variables for noise
+    createMap();
     
-    // Create a test object:
-    string test_path = "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Objects/lowpolytree/Lowpoly_tree_sample.obj";
-    Model treeModel(test_path);
+    //this checks for the max height so it adjusts our collision detection
+    float maxHeight = *max_element(heights.begin(), heights.end());
+    
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsClassic();
+    
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    
+    ImGui_ImplOpenGL3_Init(glsl_version);
     
     
-    
-    
-    
-    
-    
-    
-    
+    // Create a tree object:
+    string tree_path = "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Objects/lowpolytree/Lowpoly_tree_sample.obj";
+    Model treeModel(tree_path);
     
     
     
@@ -295,11 +326,15 @@ int main(int argc, char*argv[])
     // ------------------------
     while(!glfwWindowShouldClose(window))
     {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
         
         if(!updateMap)
         {
             createMap(treeModel);
             updateMap = !updateMap;
+            cout<<TerrainMode<<endl;
         }
         
         
@@ -340,11 +375,6 @@ int main(int argc, char*argv[])
         
         GLuint projectionMatrix_texture = glGetUniformLocation(textureShader.ID, "projection");
         glUniformMatrix4fv(projectionMatrix_texture, 1, GL_FALSE, &projectionMatrix[0][0]);
-        
-        // do the same for the bioShader
-        //        bioShader.use();
-        //        bioShader.setMat4("projection", projectionMatrix);
-        //        bioShader.setMat4("view", viewMatrix);
         
         
         textureShader.use();
@@ -403,16 +433,20 @@ int main(int argc, char*argv[])
         glUniformMatrix4fv(lightSpaceMatrixShader, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
         
         
-        //        glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 1);
         textureShader.setBool("textureOn", true);
-        
         if (textureOn)
             textureShader.setBool("textureOn", true);
         else
             textureShader.setBool("textureOn", false);
         
+        textureShader.setBool("flatOn", true);
+        if (flatOn)
+            textureShader.setBool("flatOn", true);
+        else
+            textureShader.setBool("flatOn", false);
         
         
+        glUniform1f(glGetUniformLocation(textureShader, "newY"), xTrans);
         renderTerrain(terrainVAOs, textureShader, nIndices, cameraPosition, treeModel);
         
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
@@ -431,7 +465,81 @@ int main(int argc, char*argv[])
         glDepthMask(GL_TRUE);
         
         
+        //collision detection for camera
+        if(maxHeight+3.199  > cameraPosition.y) {
+            cameraPosition.y +=4;
+        }
         
+        if(fovAngle <4) {
+            fovAngle =5;
+        }
+        
+        //fps printing for debugging
+        double currentTime2 = glfwGetTime();
+        nbFrames++;
+        if ( currentTime2 - lastTime2 >= 1.0 ){ // If last prinf() was more than 1 sec ago
+            // printf and reset timer
+            //                                         printf("%f ms/frame\n", 1000.0/double(nbFrames));
+            //                                            printf("%f fps\n", double(nbFrames));
+            nbFrames = 0;
+            lastTime2 += 1.0;
+            
+            
+        }
+        if (show_demo_window)
+            
+            
+            // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+        {
+          
+             
+            
+            ImGui::Begin("World Control");                          // Create a window called "Hello, world!" and append into it.
+            
+            ImGui::Text("World Control Start Up.");                         // Display some text (you can use a format strings too)
+            ImGui::Text("Please set parameters");
+            ImGui::Text("press TAB when finished");
+            
+            ImGui::SliderFloat("Terrian Height Control", &xTrans, -0.99f, .199f);
+             ImGui::Text("Sunlight Positon ");
+            ImGui::SliderFloat("X", &lightpos.x, 0.0f, 200.f);
+            ImGui::SliderFloat("Y", &lightpos.y,0.0f, 200.f);
+            ImGui::SliderFloat("Z", &lightpos.z, 0.0f, 200.0f);
+            
+            
+            if (ImGui::Button("Jagged Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+                           TerrainMode =0;
+                           updateMap =!updateMap;
+                       }
+            if (ImGui::Button("Smooth Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+                           TerrainMode =1;
+                           updateMap =!updateMap;
+                       }
+            if (ImGui::Button("Block Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+                           TerrainMode =2;
+                           updateMap =!updateMap;
+                       }
+            
+            if (ImGui::Button("Flat Shading Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+                flatOn=!flatOn;
+                                    
+                                  }
+            
+            if (ImGui::Button("Textures On/Off"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+                textureOn=!textureOn;
+              
+            }
+            
+         
+            
+        
+            
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
+        }
+        
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         
         
         
@@ -721,20 +829,23 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 
 
-void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeModel)
+void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model &treeModel)
 {
     vector<float> vertices;
-    vector <int> indices(6 * (mapY - 1) * (mapY - 1));
+    vector <int> indices(6 * (mapZ - 1) * (mapZ - 1));
     vector<float> textureCoords;
     //    vector<float> bio;
-    
+    float xSample =0;
+    float zSample = 0;
     float amp  = 1;
     float freq = 1;
+    
+
     
     //create vertices and noise
     float  rangedNoise =0;
     
-    for (int y = 0; y < mapY ; y++) {
+    for (int z = 0; z < mapZ ; z++) {
         for (int x = 0; x < mapX; x++) {
             vertices.push_back(x);
             textureCoords.push_back(x);
@@ -742,8 +853,23 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
             freq = 1;
             float noiseHeight = 0;
             for (int i = 0; i < octaves; i++) {
-                float xSample = (x + xOffset * (mapX-1)) / noiseScale * freq;
-                float ySample = (y + yOffset * (mapY-1)) / noiseScale * freq;
+                //jagged
+                if(TerrainMode ==0){
+                                  xSample = (xOffset * (mapX-1) + x-1)  / noiseScale * freq;
+                                  zSample = (zOffset * (mapZ-1) + z-1) / noiseScale * freq;
+                }
+                 
+                //smooth
+                if(TerrainMode ==1) {
+                        xSample = (xOffset * (mapX-1) + x-1)  / noiseScale;
+                        zSample = (zOffset * (mapZ-1) + z-1) / noiseScale;
+                }
+                
+                //block
+                if(TerrainMode ==2) {
+                        xSample = (xOffset * (mapX-1) + x-1)  / 32;
+                        zSample = (zOffset * (mapZ-1) + z-1) / 32;
+                }
                 
                 float perlinValue = SimplexNoise::noise(xSample,ySample);
                 noiseHeight += perlinValue * amp;
@@ -753,16 +879,16 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
             }
             rangedNoise = Remap(noiseHeight, -1.0, 1, 0, 1);
             
-            
+            heights.push_back(rangedNoise * meshHeight);
             vertices.push_back((rangedNoise * meshHeight));
-            vertices.push_back(y);
-            textureCoords.push_back(y);
+            vertices.push_back(z);
+            textureCoords.push_back(z);
         }
     }
     
     // generate a large list of semi-random model transformation matrices
     // ------------------------------------------------------------------
-    unsigned int amount = mapX * mapY;
+    unsigned int amount = mapX * mapZ;
     glm::mat4 *modelMatrices;
     modelMatrices = new glm::mat4[5000];
     vector<float> vertices_copy = vertices;
@@ -771,12 +897,12 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
     }
     
     int acounter = 0;
-    for (int i = 0; i <yMapChunks; i++) {
+    for (int i = 0; i <zMapChunks; i++) {
         for (int j = 0; j < xMapChunks; j++) {
-            for (int y = 0; y < mapY; y++) {
+            for (int y = 0; y < mapZ; y++) {
                 for (int x = 0; x < mapX; x++) {
                     vertices_copy[acounter] = vertices_copy[acounter] + (-mapX / 2.0 + (mapX - 1) * j);
-                    vertices_copy[acounter+2] = vertices_copy[acounter+2] + (-mapY / 2.0 + (mapY - 1) * i);
+                    vertices_copy[acounter+2] = vertices_copy[acounter+2] + (-mapZ / 2.0 + (mapZ - 1) * i);
                     acounter += 3;
                 }
             }
@@ -785,7 +911,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
     
     int counter = 0;
     while (counter < 5000) {
-        int c = (rand() % (mapY * mapX * 100)) * 3; // random number that is less than vertices_copy.size() [1,228,800] and divisible by 3
+        int c = (rand() % (mapZ * mapX * 100)) * 3; // random number that is less than vertices_copy.size() [1,228,800] and divisible by 3
         float x = vertices_copy[c];
         float y = vertices_copy[c+1];
         float z = vertices_copy[c+2];
@@ -807,7 +933,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
     unsigned int buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, (mapY * mapX) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (mapZ * mapX) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
     
     
     // set transformation matrices as an instance vertex attribute (with divisor 1)
@@ -836,35 +962,21 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    int pointer = 0;
-    for(int y = 0; y < mapY - 1; y++)
-    {
-        for(int x = 0; x < mapX - 1; x++)
-        {
-            int topLeft = (y * mapY) + x;
-            int topRight = topLeft + 1;
-            int bottomLeft = ((y + 1) * mapY) + x;
-            int bottomRight = bottomLeft + 1;
-            indices[pointer++] = topLeft;
-            indices[pointer++] = bottomLeft;
-            indices[pointer++] = topRight;
-            indices[pointer++] = topRight;
-            indices[pointer++] = bottomLeft;
-            indices[pointer++] = bottomRight;
-        }
-    }
-    
-    
-    
+  int pointer = 0;
+       for(int z = 0; z < mapZ - 1; z++) {
+           for(int x = 0; x < mapX - 1; x++) {
+               int topLeft = (z * mapZ) + x;
+               int topRight = topLeft + 1;
+               int bottomLeft = ((z + 1) * mapZ) + x;
+               int bottomRight = bottomLeft + 1;
+               indices[pointer++] = topLeft;
+               indices[pointer++] = bottomLeft;
+               indices[pointer++] = topRight;
+               indices[pointer++] = topRight;
+               indices[pointer++] = bottomLeft;
+               indices[pointer++] = bottomRight;
+           }
+       }
     
     
     GLuint VBO[2], EBO;
@@ -916,13 +1028,13 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     glActiveTexture(GL_TEXTURE0+ 5);
     glBindTexture(GL_TEXTURE_2D, waterTextureID);
     
-    for (int y = 0; y < yMapChunks; y++)
+    for (int z = 0; z < zMapChunks; z++)
         for (int x = 0; x < xMapChunks; x++) {
             
             shader.use();
             
             mat4 mvp = mat4(1.0f);
-            mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapY / 2.0 + (mapY - 1) * y));
+            mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapZ / 2.0 + (mapZ - 1) * z));
             glUniformMatrix4fv(modelViewProjection_terrain, 1, GL_FALSE, &mvp[0][0]);
             
             glBindVertexArray(VAO[x + y*xMapChunks]);
@@ -956,11 +1068,11 @@ float Remap (float value, float from1, float to1, float from2, float to2)
 
 void createMap(Model &treeModel)
 {
-    for (int y = 0; y < yMapChunks; y++)
+    for (int z = 0; z < zMapChunks; z++)
     {
         for (int x = 0; x < xMapChunks; x++)
         {
-            createTerrainGeometry(terrainVAOs[x + y*xMapChunks], x, y, treeModel);
+            createTerrainGeometry(terrainVAOs[x + z*xMapChunks], x, z, treeModel);
         }
     }
 }
