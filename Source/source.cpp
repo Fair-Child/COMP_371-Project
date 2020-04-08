@@ -769,15 +769,26 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
     
     int counter2 = 0;
     while (counter2 < 500) {
-        int c = (rand() % (mapY * mapX)) * 3;   // random number that is less than vertices.size() [12288] and divisible by 3
+           // random number that is less than vertices.size() [12288] and divisible by 3
         mat4 model = mat4(1.0f);
+        int c = (rand() % (mapY * mapX)) * 3;
         float x = vertices[c];
         float y = vertices[c+1];
         float z = vertices[c+2];
-        model = glm::translate(model, vec3(x, y, z));
+
+        if (y < 6.0 || y > 18.0)
+            continue;
+
+        int xCoord = rand() % 11;
+        int yCoord = rand() % 11;
+
+        model = glm::translate(model, vec3(x + (-mapX / 2.0 + (mapX - 1) * xCoord), y, z + (-mapY / 2.0 + (mapY - 1) * yCoord)));
+
+        model = glm::scale(model, vec3(0.3f));
         modelMatrices[counter2] = model;
         counter2++;
     }
+
     
     
     // configure instanced array
@@ -909,9 +920,10 @@ void renderTerrain(vector <GLuint> &VAO, Shader &terrainShader, Shader &bioShade
     if (testModel.textures_loaded.size() > 0)   // don't try to load a non-existant shader
         glBindTexture(GL_TEXTURE_2D, testModel.textures_loaded[0].id);
     
-    int numberOfObjects = 10;
+    int numberOfObjects = 500;
     for (unsigned int i = 0; i < testModel.meshes.size(); i++)
     {
+        
         glBindVertexArray(testModel.meshes[i].VAO);
         glDrawElementsInstanced(GL_TRIANGLES, testModel.meshes[i].indices.size(), GL_UNSIGNED_INT, 0, numberOfObjects);
         glBindVertexArray(0);
