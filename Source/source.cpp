@@ -405,13 +405,11 @@ int main(int argc, char*argv[])
         //        glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 1);
         textureShader.setBool("textureOn", true);
         
-        if(textureOn) {
-            //            glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 1);
+        if (textureOn)
             textureShader.setBool("textureOn", true);
-        } else {
-            //            glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 0);
+        else
             textureShader.setBool("textureOn", false);
-        }
+        
         
         
         renderTerrain(terrainVAOs, textureShader, bioShader, nIndices, cameraPosition, treeModel);
@@ -769,21 +767,21 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeM
     
     int counter2 = 0;
     while (counter2 < 500) {
-           // random number that is less than vertices.size() [12288] and divisible by 3
-        mat4 model = mat4(1.0f);
-        int c = (rand() % (mapY * mapX)) * 3;
+        int c = (rand() % (mapY * mapX)) * 3; // random number that is less than vertices.size() [12288] and divisible by 3
         float x = vertices[c];
         float y = vertices[c+1];
         float z = vertices[c+2];
 
-        if (y < 6.0 || y > 18.0)
+        if (y < 5.5 || y > 17.5)    // matches Matt's numbers in the fragshader
             continue;
-
-        int xCoord = rand() % 11;
-        int yCoord = rand() % 11;
-
-        model = glm::translate(model, vec3(x + (-mapX / 2.0 + (mapX - 1) * xCoord), y, z + (-mapY / 2.0 + (mapY - 1) * yCoord)));
-
+//
+//        int xCoord = rand() % 11;
+//        int yCoord = rand() % 11;
+//
+//        model = glm::translate(model, vec3(x + (-mapX / 2.0 + (mapX - 1) * xCoord), y, z + (-mapY / 2.0 + (mapY - 1) * yCoord)));
+        
+        mat4 model = mat4(1.0f);
+        model = glm::translate(model, vec3(x, y, z));
         model = glm::scale(model, vec3(0.3f));
         modelMatrices[counter2] = model;
         counter2++;
@@ -917,15 +915,15 @@ void renderTerrain(vector <GLuint> &VAO, Shader &terrainShader, Shader &bioShade
     bioShader.use();
     bioShader.setInt("texture_diffuse1", 0);
     glActiveTexture(GL_TEXTURE0);
-    if (testModel.textures_loaded.size() > 0)   // don't try to load a non-existant shader
+    if (testModel.textures_loaded.size() > 0)   // don't try to load a non-existant texture
         glBindTexture(GL_TEXTURE_2D, testModel.textures_loaded[0].id);
     
     int numberOfObjects = 500;
     for (unsigned int i = 0; i < testModel.meshes.size(); i++)
     {
         
-        glBindVertexArray(testModel.meshes[i].VAO);
-        glDrawElementsInstanced(GL_TRIANGLES, testModel.meshes[i].indices.size(), GL_UNSIGNED_INT, 0, numberOfObjects);
+        glBindVertexArray(testModel.meshes.at(i).VAO);
+        glDrawElementsInstanced(GL_TRIANGLES, testModel.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, numberOfObjects);
         glBindVertexArray(0);
     }
     
