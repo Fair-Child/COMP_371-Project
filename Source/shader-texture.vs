@@ -26,21 +26,30 @@ out vec3 POS;
 
 
 
+uniform float newY;
 
 
 void main()
 {
+    //take the uniform newY to change the Y cordinate of the vertices
+    vec3 calPos = aPos;
     
+
     
+    float changeY = calPos.y * newY;
+    
+    calPos.y = calPos.y + changeY;
+    
+
     
     //calculate normals here
-    vec4 pos1 = vec4(aPos, 1.0);
+    vec4 pos1 = vec4(calPos, 1.0);
     POS = (mvp * pos1 ).xyz - eyes;
 
     vertexUV = aUV;
-    FragPos = vec3(mvp * vec4(aPos,1.0f));
+    FragPos = vec3(mvp * vec4(calPos,1.0f));
     FragPosLightSpace = lightSpaceMatrix * vec4(FragPos,1.0f);
-    gl_Position = projection * view * mvp * vec4(aPos, 1.0f);
+    gl_Position = projection * view * mvp * vec4(calPos, 1.0f);
     
     
     

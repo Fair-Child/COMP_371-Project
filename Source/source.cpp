@@ -18,7 +18,7 @@
 //-- these links are what i used for help understanding heightmap and noise tiling (making the noise link up at the edges!)
 // -https://pdfs.semanticscholar.org/5e95/c1c36a07a2919c3da123f17f9d408a1ea6a5.pdf
 // - http://libnoise.sourceforge.net/noisegen/index.html
-// - OpenGL Development Cookbook chapter 5
+// - DAVID WOLF openGL 4.0 shading language cookbook page 269-270 
 // - chunk mapping https://en.wikibooks.org/wiki/OpenGL_Programming/Glescraft_1
 // - thinmatrix help https://www.youtube.com/watch?v=qChQrNWU9Xw&list=PLRIWtICgwaX0u7Rf9zkZhLoLuZVfUksDP&index=37
 
@@ -45,14 +45,12 @@
 
 
 
+
 //define namespaces for glm and c++ std
 using namespace glm;
 using namespace std;
 
 //global variables and functions for the project
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void renderLight(const GLuint &lamp_Shader);
-float Remap (float value, float from1, float to1, float from2, float to2);
 
 
 //this is not used right now
@@ -62,7 +60,8 @@ bool updateMap = false;
 vec3 lightpos (149.0f, 38.0f,151.0f);
 
 double lastTime2 = glfwGetTime();
- int nbFrames = 0;
+int nbFrames = 0;
+int counter =0;
 
 //worldspace matrix
 
@@ -83,34 +82,33 @@ GLuint grassTextureID;
 GLuint waterTextureID;
 vector<GLuint> VAO(100);
 
+
+
+ //params to start
+int xMapChunks = 10;
+int zMapChunks = 10;
+int mapX = 128;
+int mapZ = 128;
+int nIndices = mapX * mapZ * 6;
+
+//camera info
+vec3 cameraPosition(0.0f,43.0f,30.0f);
+vec3 cameraLookAt(0.0f, 0.0f, 0.0f);
+vec3 cameraUp(0.0f, 1.0f, 0.0f);
+
 //primatative rendering options
 int primativeRender = GL_TRIANGLES;
 
 
-//camera info
-vec3 cameraPosition(0.0f,56.0f,30.0f);
-vec3 cameraLookAt(0.0f, 0.0f, 0.0f);
-vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
-//vectors that hold geomtry information
-
-
-
+//functions
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void renderLight(const GLuint &lamp_Shader);
+float Remap (float value, float from1, float to1, float from2, float to2);
 void createMap();
 void renderTerrain(vector <GLuint> &VAO , const GLuint &shader,  int &nIndices,vec3 &cameraPosition);
-void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset);
+void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset);
 
-
-
-
-//params to start
-
-int renderDistance = 10;
-int xMapChunks = 10;
-int yMapChunks = 10;
-int mapX = 128;
-int mapY = 128;
-int nIndices = mapX * mapY * 6;
 
 
 //noise options (would love to make this user definable with a GUI ...a boy can dream
@@ -120,9 +118,10 @@ float meshHeight = 25;  // Vertical scaling
 float noiseScale = 64;  // Horizontal scaling
 float persistence = 0.5;
 float lacunarity = 2;
+float xTrans = 0;
 
-
-
+GLuint VBO[2], EBO;
+vector  <float> heights;
 
 
 int main(int argc, char*argv[])
@@ -176,7 +175,7 @@ int main(int argc, char*argv[])
     glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
     glViewport(0, 0, screenWidth, screenHeight);
     
-
+    
     
     //texture shader for grid, olaf
     
@@ -187,6 +186,9 @@ int main(int argc, char*argv[])
     //shader for simple shadows
     GLuint simpleShadow = Shader(FileSystem::getPath("Source/simple-shadow-shader.vs"),FileSystem::getPath("Source/simple-shadow-shader.fs"));
     
+    //this allows us to send an out from the vertex shader to our feedback buffer
+    const GLchar* feedbackVaryings[] = { "calPos" };
+    glTransformFeedbackVaryings(textureShader, 1, feedbackVaryings, GL_INTERLEAVED_ATTRIBS);
     
     //skybox VAO and VBO
     
@@ -283,27 +285,25 @@ int main(int argc, char*argv[])
     glUniform1i(glGetUniformLocation(textureShader, "grassTexture"), 4);
     glUniform1i(glGetUniformLocation(textureShader, "waterTexture"), 5);
     
-    
-    
+
     
     //create map but for ask for input variables for noise
     
 
+    createMap();
     
-//    createMap();
-   
+    float maxHeight = *max_element(heights.begin(), heights.end());
+
+    
+    cout<<maxHeight<<endl;
     
     
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
     {
         
-        if(!updateMap) {
-            createMap();
-            updateMap = !updateMap;
-        }
         
-    
+        
         
         
         float dt = glfwGetTime() - lastFrameTime;
@@ -329,8 +329,8 @@ int main(int argc, char*argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         
-
-
+        
+        
         //texture shader
         glUseProgram(textureShader);
         
@@ -403,7 +403,7 @@ int main(int argc, char*argv[])
             glUniform1ui(glGetUniformLocation(textureShader, "textureOn"), 0);
         }
         
-        
+        glUniform1f(glGetUniformLocation(textureShader, "newY"), xTrans);
         renderTerrain(VAO,textureShader, nIndices, cameraPosition);
         
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
@@ -422,19 +422,31 @@ int main(int argc, char*argv[])
         glDepthMask(GL_TRUE);
         
         
+        //collision detection for camera
+        if(maxHeight+3.199  > cameraPosition.y) {
+            cameraPosition.y +=4;
+        }
+        
+        if(fovAngle <4) {
+            fovAngle =5;
+        }
+        
+        //fps printing for debugging
         double currentTime2 = glfwGetTime();
-             nbFrames++;
-             if ( currentTime2 - lastTime2 >= 1.0 ){ // If last prinf() was more than 1 sec ago
-                 // printf and reset timer
-                 printf("%f ms/frame\n", 1000.0/double(nbFrames));
-                    printf("%f fps\n", double(nbFrames));
-                 nbFrames = 0;
-                 lastTime2 += 1.0;
-           
-           
-             }
+        nbFrames++;
+        if ( currentTime2 - lastTime2 >= 1.0 ){ // If last prinf() was more than 1 sec ago
+            // printf and reset timer
+            //                                         printf("%f ms/frame\n", 1000.0/double(nbFrames));
+            //                                            printf("%f fps\n", double(nbFrames));
+            nbFrames = 0;
+            lastTime2 += 1.0;
+            
+            
+        }
         
-        
+
+
+      
         
         // End Frame
         glfwSwapBuffers(window);
@@ -458,7 +470,7 @@ int main(int argc, char*argv[])
         cameraVerticalAngle   -= dy * cameraAngularSpeed * dt;
         
         
-        cameraVerticalAngle = std::max(-90.0f, std::min(90.0f, cameraVerticalAngle));
+        cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
         if (cameraHorizontalAngle > 360)
         {
             cameraHorizontalAngle -= 360;
@@ -479,7 +491,7 @@ int main(int argc, char*argv[])
         
         //these are the following keybindings to control the olaf, the camera and the world orientation, textures, lighting and shadows
         
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // camera zoom in
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // camera zoom in
         {
             cameraPosition.z -= currentCameraSpeed * dt*40;
             lightpos.z -= currentCameraSpeed * dt*40;
@@ -487,7 +499,7 @@ int main(int argc, char*argv[])
             
         }
         
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // camera zoom out
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // camera zoom out
         {
             cameraPosition.z += currentCameraSpeed * dt*40;
             lightpos.z += currentCameraSpeed * dt*40;
@@ -497,7 +509,7 @@ int main(int argc, char*argv[])
         
         
         
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ) // move camera to the left
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ) // move camera to the left
         {
             cameraPosition.x -= currentCameraSpeed * dt*40;
             lightpos.x -= currentCameraSpeed * dt*40;
@@ -505,7 +517,7 @@ int main(int argc, char*argv[])
             
         }
         
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // move camera to the right
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // move camera to the right
         {
             cameraPosition.x += currentCameraSpeed * dt*40;
             lightpos.x += currentCameraSpeed * dt*40;
@@ -638,30 +650,43 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) //rotate Y axis of the world
         {
             
-            float x =5.01;
-            float y=5.01;
-            float z=5.01;
-            x+=0.01;
-            y+=0.01;
-            z+=0.01;
-            WorldTransformMatrix = WorldTransformMatrix * rotate(mat4(1.0f), radians(x),vec3(0.0f,1.f, 0.f));
+            xTrans = xTrans + 0.001f;
+            if(xTrans >= 0.199) {
+                xTrans = 0.199;
+            }
+           
+            
+            
+            //            float x =5.01;
+            //            float y=5.01;
+            //            float z=5.01;
+            //            x+=0.01;
+            //            y+=0.01;
+            //            z+=0.01;
+            //            WorldTransformMatrix = WorldTransformMatrix * rotate(mat4(1.0f), radians(x),vec3(0.0f,1.f, 0.f));
         }
         
         
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) // rotate Y axis of the world in the other orientation
         {
             
-            float x =5.01;
-            float y=5.01;
-            float z=5.01;
-            x+=0.01;
-            y+=0.01;
-            z+=0.01;
-            WorldTransformMatrix = WorldTransformMatrix * rotate(mat4(1.0f), radians(x),vec3(0.0f,-1.0f, 0.f));
+            xTrans = xTrans - 0.001f;
+            
+            if(xTrans <= -0.99) {
+                xTrans = -0.99;
+                       }
+            //            float x =5.01;
+            //            float y=5.01;
+            //            float z=5.01;
+            //            x+=0.01;
+            //            y+=0.01;
+            //            z+=0.01;
+            //            WorldTransformMatrix = WorldTransformMatrix * rotate(mat4(1.0f), radians(x),vec3(0.0f,-1.0f, 0.f));
         }
         
         if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) // reset world orientation to original settings
         {
+            
             
             
             WorldTransformMatrix = mat4(1.0f);
@@ -683,7 +708,7 @@ int main(int argc, char*argv[])
     }
     
     
-  
+    
     
     // Shutdown GLFW
     glfwTerminate();
@@ -695,32 +720,11 @@ int main(int argc, char*argv[])
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_X && action == GLFW_PRESS)
-        textureOn = !textureOn;
-        
     
-    if (key == GLFW_KEY_I && action == GLFW_PRESS)
-    { octaves += 1;
-    updateMap = !updateMap;
-    }
-
-    if (key == GLFW_KEY_O && action == GLFW_PRESS)
-    { octaves -= 1;
-         updateMap = !updateMap;
-    }
+    
     if (key == GLFW_KEY_B && action == GLFW_PRESS)
         textureOn = !textureOn;
-
-
-     if (key == GLFW_KEY_J && action == GLFW_PRESS)
-     { meshHeight += 1;
-     updateMap = !updateMap;
-     }
-
-     if (key == GLFW_KEY_K && action == GLFW_PRESS)
-     { meshHeight -= 1;
-          updateMap = !updateMap;
-     }
+    
     
 }
 
@@ -728,9 +732,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 
 
-void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
+void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset) {
     vector<float> vertices;
-    vector <int> indices(6 * (mapY - 1) * (mapY - 1));
+    vector <int> indices(6 * (mapZ - 1) * (mapZ - 1));
     vector<float> textureCoords;
     
     
@@ -743,9 +747,9 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
     //create vertices and noise
     float  rangedNoise =0;
     
- 
     
-    for (int y = 0; y < mapY ; y++)
+    
+    for (int z = 0; z < mapZ ; z++)
         for (int x = 0; x < mapX; x++) {
             vertices.push_back(x);
             textureCoords.push_back(x);
@@ -755,50 +759,55 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
             for (int i = 0; i < octaves; i++) {
                 
                 //jagged mode
-//                float xSample = (x + xOffset * (mapX-1))  / noiseScale * freq;
-//                float ySample = (y + yOffset * (mapY-1)) / noiseScale * freq;
-              
+                //                float xSample = (x + xOffset * (mapX-1))  / noiseScale * freq;
+                //                float zSample = (z + zOffset * (mapZ-1)) / noiseScale * freq;
+                
                 
                 //more tame jagged
-                float xSample = (xOffset * (mapX-1) + x-1)  / noiseScale * freq;
-                float ySample = (yOffset * (mapY-1) + y-1) / noiseScale * freq;
-               
+//                float xSample = (xOffset * (mapX-1) + x-1)  / noiseScale * freq;
+//                float zSample = (zOffset * (mapZ-1) + z-1) / noiseScale * freq;
+//
                 //smooth mode
-//                float xSample = (xOffset * (mapX-1) + x-1)  / noiseScale;
-//                float ySample = (yOffset * (mapX-1) + y-1) / noiseScale;
+//                                float xSample = (xOffset * (mapX-1) + x-1)  / noiseScale;
+//                                float zSample = (zOffset * (mapZ-1) + z-1) / noiseScale;
                 
                 //block world mode
-//                float xSample = (xOffset * (mapX-1) + x-1)  / 32;
-//                float ySample = (yOffset * (mapX-1) + y-1) / 32;
-                
-       
+                                float xSample = (xOffset * (mapX-1) + x-1)  / 32;
+                                float zSample = (zOffset * (mapZ-1) + z-1) / 32;
                 
                 
                 
-                float perlinValue = SimplexNoise::noise(xSample,ySample);
+                
+                
+                float perlinValue = SimplexNoise::noise(xSample,zSample);
                 noiseHeight += perlinValue * amp;
-
+                
                 
                 amp  *= persistence;
                 freq *= lacunarity;
             }
             rangedNoise = Remap(noiseHeight, -1.0, 1, 0, 1);
             
-            
+            heights.push_back(rangedNoise * meshHeight);
             vertices.push_back((rangedNoise * meshHeight));
-            vertices.push_back(y);
-            textureCoords.push_back(y);
+            vertices.push_back(z);
+             textureCoords.push_back(z);
+            
+            
         }
     
     
     
     
+    
+    
+    
     int pointer = 0;
-    for(int y = 0; y < mapY - 1; y++) {
+    for(int z = 0; z < mapZ - 1; z++) {
         for(int x = 0; x < mapX - 1; x++) {
-            int topLeft = (y * mapY) + x;
+            int topLeft = (z * mapZ) + x;
             int topRight = topLeft + 1;
-            int bottomLeft = ((y + 1) * mapY) + x;
+            int bottomLeft = ((z + 1) * mapZ) + x;
             int bottomRight = bottomLeft + 1;
             indices[pointer++] = topLeft;
             indices[pointer++] = bottomLeft;
@@ -813,7 +822,7 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
     
     
     
-    GLuint VBO[2], EBO;
+    //    GLuint VBO[2], EBO;
     
     // VAO and VBO generateion
     glGenBuffers(2, VBO);
@@ -843,9 +852,6 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
     
     
     
-    
-    
-    
 }
 
 
@@ -859,51 +865,55 @@ void renderTerrain(vector <GLuint> &VAO, const GLuint &shader,  int &nIndices, v
     GLuint modelViewProjection_terrain = glGetUniformLocation(shader, "mvp");
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthMap);
-
+    
     glActiveTexture(GL_TEXTURE0 +  1);
     glBindTexture(GL_TEXTURE_2D, snowTextureID);
-
+    
     glActiveTexture(GL_TEXTURE0 + 2);
     glBindTexture(GL_TEXTURE_2D, sandTextureID);
     //
     glActiveTexture(GL_TEXTURE0 + 3);
     glBindTexture(GL_TEXTURE_2D, rockTextureID);
-
+    
     glActiveTexture(GL_TEXTURE0 + 4);
     glBindTexture(GL_TEXTURE_2D, grassTextureID);
     //
     glActiveTexture(GL_TEXTURE0+ 5);
     glBindTexture(GL_TEXTURE_2D, waterTextureID);
-
-    
- 
     
     
     
-    for (int y = 0; y < yMapChunks; y++)
+    
+    
+    
+    for (int z = 0; z < zMapChunks; z++)
         for (int x = 0; x < xMapChunks; x++) {
             
-            mat4 mvp = glm::mat4(1.0f);
-            mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapY / 2.0 + (mapY - 1) * y));
             
+            mat4 mvp = glm::mat4(1.0f);
+            mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapZ / 2.0 + (mapZ - 1) * z));
             
             
             glUniformMatrix4fv(modelViewProjection_terrain, 1, GL_FALSE, &mvp[0][0]);
             
             
             
-            glBindVertexArray(VAO[x + y*xMapChunks]);
+            glBindVertexArray(VAO[x + z*xMapChunks]);
             
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
             
-         
-              glBindVertexArray(0);
+            
+            glBindVertexArray(0);
+            
+            
+            
+            
             
             
             
         }
     
- 
+    
 }
 
 //helper function to map values to stay within a range
@@ -915,14 +925,13 @@ float Remap (float value, float from1, float to1, float from2, float to2)
 
 void createMap() {
     
-      for (int y = 0; y < yMapChunks; y++){
-          for (int x = 0; x < xMapChunks; x++) {
-              createTerrianGeometry(VAO[x + y*xMapChunks], x, y);
-              
-          }
-      }
+    for (int z = 0; z < zMapChunks; z++){
+        for (int x = 0; x < xMapChunks; x++) {
+            createTerrianGeometry(VAO[x + z*xMapChunks], x, z);
+            
+        }
+    }
 }
-
 
 
 
