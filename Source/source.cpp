@@ -43,10 +43,16 @@
 using namespace glm;
 using namespace std;
 
+
+
+
 //global variables and functions for the project
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void renderLight(const GLuint &lamp_Shader);
 float Remap (float value, float from1, float to1, float from2, float to2);
+void createMap(Model &treeModel);
+void renderTerrain(vector <GLuint> &VAO, Shader &shader, Shader &bioShader, int &nIndices, vec3 &cameraPosition, Model &testModel);
+void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeModel);
 
 
 //this is not used right now
@@ -74,8 +80,7 @@ GLuint rockTextureID;
 GLuint sandTextureID;
 GLuint grassTextureID;
 GLuint waterTextureID;
-vector<GLuint> VAO(100);
-vector<GLuint> treeVAO(100);
+vector<GLuint> terrainVAOs(100);
 
 //primatative rendering options
 int primativeRender = GL_TRIANGLES;
@@ -88,11 +93,6 @@ vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
 //vectors that hold geomtry information
 
-
-
-void createMap();
-void renderTerrain(vector <GLuint> &VAO , Shader &shader,  int &nIndices,vec3 &cameraPosition, Model m);
-void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset);
 
 
 
@@ -177,6 +177,7 @@ int main(int argc, char*argv[])
     Shader textureShader(FileSystem::getPath("Source/shader-texture.vs").c_str(),FileSystem::getPath("Source/shader-texture.fs").c_str());
     Shader skyBoxShader(FileSystem::getPath("Source/skyBoxShader.vs").c_str(),FileSystem::getPath("Source/skyBoxShader.fs").c_str());
     Shader simpleShadow(FileSystem::getPath("Source/simple-shadow-shader.vs").c_str(),FileSystem::getPath("Source/simple-shadow-shader.fs").c_str());
+    Shader bioShader(FileSystem::getPath("Source/bioshader.vs").c_str(),FileSystem::getPath("Source/bioshader.fs").c_str());
     
     
     //skybox VAO and VBO
@@ -275,16 +276,28 @@ int main(int argc, char*argv[])
     
     // Create a test object:
     string test_path = "/Users/jeremygaudet/Documents/Xcode/COMP_371-Project/Xcode/Objects/lowpolytree/Lowpoly_tree_sample.obj";
-    Model testModel(test_path);
+    Model treeModel(test_path);
     
     
-    // Entering Main Loop
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    // Entering Main While Loop
+    // ------------------------
     while(!glfwWindowShouldClose(window))
     {
         
         if(!updateMap)
         {
-            createMap();
+            createMap(treeModel);
             updateMap = !updateMap;
         }
         
@@ -327,6 +340,13 @@ int main(int argc, char*argv[])
         GLuint projectionMatrix_texture = glGetUniformLocation(textureShader.ID, "projection");
         glUniformMatrix4fv(projectionMatrix_texture, 1, GL_FALSE, &projectionMatrix[0][0]);
         
+        // do the same for the bioShader
+        bioShader.use();
+        bioShader.setMat4("projection", projectionMatrix);
+        bioShader.setMat4("view", viewMatrix);
+        
+        
+        textureShader.use();
         GLuint normalLook = glGetUniformLocation(textureShader.ID, "eyes");
         glUniform3f(normalLook, cameraPosition.x,cameraPosition.y,cameraPosition.z);
         
@@ -355,17 +375,17 @@ int main(int argc, char*argv[])
         float near_plane = 1.0f, far_plane = 600.0f;
         
         
-        lightProjection = glm::perspective(glm::radians(130.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
+        lightProjection = perspective(radians(130.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
         
         
-        lightView = glm::lookAt(lightpos, glm::vec3(0.0f), glm::vec3(0.0, 0.0, 1.0));
+        lightView = lookAt(lightpos, vec3(0.0f), vec3(0.0, 0.0, 1.0));
         lightSpaceMatrix = lightProjection * lightView;
         // render scene from light's point of view
         simpleShadow.use();
         GLuint lightSpaceMatrixSimple = glGetUniformLocation(simpleShadow.ID, "lightSpaceMatrix");
         glUniformMatrix4fv(lightSpaceMatrixSimple, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
         
-        renderTerrain(VAO, simpleShadow, nIndices, cameraPosition, testModel);
+        renderTerrain(terrainVAOs, simpleShadow, simpleShadow, nIndices, cameraPosition, treeModel);
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // reset viewport
@@ -394,7 +414,7 @@ int main(int argc, char*argv[])
         }
         
         
-        renderTerrain(VAO, textureShader, nIndices, cameraPosition, testModel);
+        renderTerrain(terrainVAOs, textureShader, bioShader, nIndices, cameraPosition, treeModel);
         
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyBoxShader.use();
@@ -671,12 +691,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     
     
     if (key == GLFW_KEY_I && action == GLFW_PRESS)
-    { octaves += 1;
+    {
+        octaves += 1;
         updateMap = !updateMap;
     }
     
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
-    { octaves -= 1;
+    {
+        octaves -= 1;
         updateMap = !updateMap;
     }
     if (key == GLFW_KEY_B && action == GLFW_PRESS)
@@ -684,12 +706,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     
     
     if (key == GLFW_KEY_J && action == GLFW_PRESS)
-    { meshHeight += 1;
+    {
+        meshHeight += 1;
         updateMap = !updateMap;
     }
     
     if (key == GLFW_KEY_K && action == GLFW_PRESS)
-    { meshHeight -= 1;
+    {
+        meshHeight -= 1;
         updateMap = !updateMap;
     }
     
@@ -698,11 +722,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 
 
-
-void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
+void createTerrainGeometry(GLuint &VAO, int &xOffset, int &yOffset, Model &treeModel)
+{
     vector<float> vertices;
     vector <int> indices(6 * (mapY - 1) * (mapY - 1));
     vector<float> textureCoords;
+    vector<float> bio;
     
     float amp  = 1;
     float freq = 1;
@@ -710,7 +735,7 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
     //create vertices and noise
     float  rangedNoise =0;
     
-    for (int y = 0; y < mapY ; y++)
+    for (int y = 0; y < mapY ; y++) {
         for (int x = 0; x < mapX; x++) {
             vertices.push_back(x);
             textureCoords.push_back(x);
@@ -734,10 +759,67 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
             vertices.push_back(y);
             textureCoords.push_back(y);
         }
+    }
+    
+    // generate a large list of semi-random model transformation matrices
+    // ------------------------------------------------------------------
+    unsigned int amount = mapX * mapY;
+    glm::mat4 *modelMatrices;
+    modelMatrices = new glm::mat4[amount];
+    
+    int counter2 = 0;
+    while (counter2 < 500) {
+        int c = (rand() % (mapY * mapX)) * 3;   // random number that is less than vertices.size() [12288] and divisible by 3
+        mat4 model = mat4(1.0f);
+        float x = vertices[c];
+        float y = vertices[c+1];
+        float z = vertices[c+2];
+        model = glm::translate(model, vec3(x, y, z));
+        modelMatrices[counter2] = model;
+        counter2++;
+    }
+    
+    
+    // configure instanced array
+    // -------------------------
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, (mapY * mapX) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+    
+    
+    // set transformation matrices as an instance vertex attribute (with divisor 1)
+    // ----------------------------------------------------------------------------
+    for (unsigned int i = 0; i < treeModel.meshes.size(); i++)
+    {
+        unsigned int VAO = treeModel.meshes[i].VAO;
+        glBindVertexArray(VAO);
+        // set attribute pointers for matrix (4 times vec4)
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+        
+        glVertexAttribDivisor(3, 1);
+        glVertexAttribDivisor(4, 1);
+        glVertexAttribDivisor(5, 1);
+        glVertexAttribDivisor(6, 1);
+        
+        glBindVertexArray(0);
+    }
+    
+    
+    
     
     int pointer = 0;
-    for(int y = 0; y < mapY - 1; y++) {
-        for(int x = 0; x < mapX - 1; x++) {
+    for(int y = 0; y < mapY - 1; y++)
+    {
+        for(int x = 0; x < mapX - 1; x++)
+        {
             int topLeft = (y * mapY) + x;
             int topRight = topLeft + 1;
             int bottomLeft = ((y + 1) * mapY) + x;
@@ -763,8 +845,7 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     
-    // terrian coordinates
-    
+    // terrain coordinates
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -774,10 +855,7 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(int), &indices[0], GL_STATIC_DRAW);
     
-    
-    
-    
-    //texture coordinates
+    // texture coordinates
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(float), &textureCoords[0], GL_STATIC_DRAW);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
@@ -786,12 +864,10 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &yOffset) {
 }
 
 
-
-
-void renderTerrain(vector <GLuint> &VAO, Shader &shader,  int &nIndices, vec3 &cameraPosition, Model testModel) {
+void renderTerrain(vector <GLuint> &VAO, Shader &terrainShader, Shader &bioShader, int &nIndices, vec3 &cameraPosition, Model &testModel) {
     
-    shader.use();
-    GLuint modelViewProjection_terrain = glGetUniformLocation(shader.ID, "mvp");
+    terrainShader.use();
+    GLuint modelViewProjection_terrain = glGetUniformLocation(terrainShader.ID, "mvp");
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthMap);
     
@@ -813,41 +889,33 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader,  int &nIndices, vec3 &c
     for (int y = 0; y < yMapChunks; y++)
         for (int x = 0; x < xMapChunks; x++) {
             
-            mat4 mvp = glm::mat4(1.0f);
+            terrainShader.use();
+            mat4 mvp = mat4(1.0f);
             mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapY / 2.0 + (mapY - 1) * y));
             
             glUniformMatrix4fv(modelViewProjection_terrain, 1, GL_FALSE, &mvp[0][0]);
-            
             glBindVertexArray(VAO[x + y*xMapChunks]);
-            
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
             
             
-            // draw the trees
-            //            mvp = mat4(1.0f);
-            //            mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapY / 2.0 + (mapY - 1) * y));
-            //            mvp = scale(mvp, vec3(1.0f, 1.0f, 1.0f));
-            //            shader.setMat4("mvp", mvp);
-            //            glBindVertexArray(VAO[x + y*xMapChunks]);
-            //            testModel.Draw(shader);
+            glBindVertexArray(0);   // reset
             
-            
-            
-            glBindVertexArray(0);
-            
-            // render the loaded model
-            //            glm::mat4 model = glm::mat4(1.0f);
-            //            model = glm::translate(model, glm::vec3(0.0f, 0.0f, 15.0f));
-            //            model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-            //            shader.setMat4("mvp", model);
-            //            testModel.Draw(shader);
-            //            testModel.Draw(shader);
         }
-    mat4 model = mat4(1.0f);
-    model = translate(model, vec3(0.0f, 0.0f, 0.0f));
-    model = scale(model, vec3(3.0f, 3.0f, 3.0f));
-    shader.setMat4("mvp", model);
-    testModel.Draw(shader);
+    
+    // draw bio
+    bioShader.use();
+    bioShader.setInt("texture_diffuse1", 0);
+    glActiveTexture(GL_TEXTURE0);
+    if (testModel.textures_loaded.size() > 0)   // don't try to load a non-existant shader
+        glBindTexture(GL_TEXTURE_2D, testModel.textures_loaded[0].id);
+    
+    int numberOfObjects = 10;
+    for (unsigned int i = 0; i < testModel.meshes.size(); i++)
+    {
+        glBindVertexArray(testModel.meshes[i].VAO);
+        glDrawElementsInstanced(GL_TRIANGLES, testModel.meshes[i].indices.size(), GL_UNSIGNED_INT, 0, numberOfObjects);
+        glBindVertexArray(0);
+    }
     
     
 }
@@ -859,13 +927,13 @@ float Remap (float value, float from1, float to1, float from2, float to2)
 }
 
 
-void createMap()
+void createMap(Model &treeModel)
 {
     for (int y = 0; y < yMapChunks; y++)
     {
         for (int x = 0; x < xMapChunks; x++)
         {
-            createTerrianGeometry(VAO[x + y*xMapChunks], x, y);
+            createTerrainGeometry(terrainVAOs[x + y*xMapChunks], x, y, treeModel);
         }
     }
 }
