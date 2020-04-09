@@ -6,7 +6,8 @@
 #version 330 core
 
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec2 aUV;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aUV;
 layout (location = 3) in mat4 aInstanceMatrix;
 
 
@@ -24,6 +25,7 @@ uniform float newY;
 //out's
 out vec3 vertexColor;
 out vec2 vertexUV;
+out vec3 objNormal;
 out vec3 Normal;
 out vec3 FragPos;
 out vec4 FragPosLightSpace;
@@ -50,7 +52,7 @@ void main()
     
     //calculate normals here
     
-    
+    objNormal = aNormal;
     
     vertexUV = aUV;
     FragPos = vec3(mvp * vec4(calPos,1.0f));
@@ -65,11 +67,11 @@ void main()
     
     if (!instanceOn) {
         matrixTotal = projection * view * mvp;
-        gl_Position = matrixTotal * vec4(aPos, 1.0f);
+        gl_Position = matrixTotal * vec4(calPos, 1.0f);
     }
     else {
         matrixTotal = projection * view * aInstanceMatrix;
-        gl_Position = matrixTotal * vec4(aPos, 1.0f);
+        gl_Position = matrixTotal * vec4(calPos, 1.0f);
     }
     
     //gl_Position = projection * view * mvp * vec4(calPos, 1.0f);

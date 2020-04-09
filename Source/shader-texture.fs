@@ -11,6 +11,7 @@
 //in's
 in vec3 vertexColor;
 in vec2 vertexUV;
+in vec3 objNormal;
 in vec3 Normal;
 in vec3 FragPos;
 in vec4 FragPosLightSpace;
@@ -30,9 +31,13 @@ uniform sampler2D grassTexture;
 uniform sampler2D waterTexture;
 uniform sampler2D shadowMap;
 
+//obj textures
+uniform sampler2D texture_diffuse;
+
 //bools
 uniform  bool textureOn;
 uniform bool flatOn;
+uniform bool treeColor;
 
 //lighting uniforms
 uniform vec3 lightColor;
@@ -74,90 +79,91 @@ float shadowCalculation(vec4 fragPosLightSpace)
 
 void main()
 {
+    
     //    calculate the normals here!
       vec3 result;
-    
+
     if(flatOn) {
          vec3 Normal = normalize( cross( dFdx( flatFragPos.xyz ), dFdy( flatFragPos.xyz ) ) );
         float shadow = shadowCalculation(flatFragPosLightSpace);
-      
+
         float ambientStrength = 0.9;
         vec3 ambient = ambientStrength * lightColor;
-        
+
         //diffuse
         vec3 norm = normalize(Normal);
         vec3 lightDirection = normalize(lightPos - flatFragPos);
         float diff = max(dot(norm, lightDirection), 0.0f);
         vec3 diffuse = diff * lightColor;
-        
+
         float specularStrength = 0.8;
         vec3 viewDir = normalize(viewPos - flatFragPos);
         vec3 reflectDir = reflect(-lightDirection, norm);
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0f);
         vec3 specular = specularStrength * spec * lightColor;
-       
+
         result = (ambient  + diffuse + specular) * (1 - shadow);
     } else if(!flatOn) {
-        
+
         vec3 Normal = normalize( cross( dFdx( FragPos.xyz ), dFdy( FragPos.xyz ) ) );
-        
+
         float shadow = shadowCalculation(FragPosLightSpace);
-    
+
         float ambientStrength = 0.5;
         vec3 ambient = ambientStrength * lightColor;
-        
+
         //diffuse
         vec3 norm = normalize(Normal);
         vec3 lightDirection = normalize(lightPos - FragPos);
         float diff = max(dot(norm, lightDirection), 0.0f);
         vec3 diffuse = diff * lightColor;
-        
+
         float specularStrength = 0.8;
         vec3 viewDir = normalize(viewPos - FragPos);
         vec3 reflectDir = reflect(-lightDirection, norm);
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0f);
         vec3 specular = specularStrength * spec * lightColor;
-       
+
         result = (ambient  + diffuse + specular) * (1 - shadow);
     }
-        
-        
+
+
         if(textureOn) {
-            
+
             if(FragPos.y <= 1) {
-                
-                
+
+
                 vec4 waterColor = vec4(0.39f,0.65f,0.77f,1.0f);
                 vec4 textResult= vec4(result * texture(waterTexture, vertexUV).rgb ,1.0f);
                 FragColor = textResult * waterColor ; //water
-                
+
             } else if (FragPos.y >= 1 && FragPos.y <=5.5){
                 vec4 sandColor = vec4(0.86f,0.70f,0.30f,1.0f);
                 vec4 textResult= vec4(result * texture(sandyTexture, vertexUV).rgb ,1.0f);
                 //            FragColor = texture(sandyTexture, vertexUV) * sandColor; //sand
                 FragColor = textResult * sandColor;
-                
+
             } else if (FragPos.y >= 5.5 && FragPos.y <=17.5){
                 vec4 grassColor =vec4(0.35f,0.56f,0.30f,1.0f);
                 vec4 textResult= vec4(result * texture(grassTexture, vertexUV).rgb ,1.0f);
                 //            FragColor = texture(grassTexture, vertexUV) * grassColor;;
                 FragColor = textResult * grassColor;
-                
+
             }else if (FragPos.y >= 17.5 && FragPos.y <=26.5){
                 vec4 rockColor = vec4(0.75f,0.53f,0.4f,1.0f);
                 vec4 textResult= vec4(result * texture(rockyTexture, vertexUV).rgb ,1.0f);
                 //            FragColor = texture(rockyTexture, vertexUV) * rockColor;
                 FragColor = textResult * rockColor;
-                
-            } else {
+
+            } else  if(FragPos.y >26.5){
                 vec4 snowColor = vec4(1.0f);
                 vec4 textResult= vec4(result * texture(snowTexture, vertexUV).rgb ,1.0f);
                 //            FragColor = texture(snowTexture, vertexUV) * snowColor; //snow
                 FragColor = textResult * snowColor;
             }
-            
-        } else {
-            
+
+        } else if(!textureOn){
+
             if(FragPos.y <= 1) {
                 vec3 waterColor = vec3(0.39f,0.65f,0.77f);
                 FragColor = vec4(waterColor * result,1.0f); //water
@@ -174,11 +180,24 @@ void main()
                 vec3 rockColor = vec3(0.75f,0.53f,0.4f);
                 FragColor = vec4(rockColor* result ,1.0f); //rock
             }
-            else {
+            else if(FragPos.y >26.5) {
                 vec3 snowColor = vec3(1.0f);
                 FragColor = vec4(snowColor * result,1.0f);
-                
+
             }
         }
+    
+    if(treeColor) {
+       
+
+        FragColor = vec4(1.0f);
+                
+     
+       
+        
+
+        
+    
     }
 
+}

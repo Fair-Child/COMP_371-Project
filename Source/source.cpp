@@ -127,7 +127,7 @@ void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model &model
 
 
 // model
-const int number_of_trees = 600;    // FIXME: This cannot go higher than 500! Don't know why!
+const int number_of_trees = 400;    // FIXME: This cannot go higher than 500! Don't know why!
 
 
 //noise options
@@ -301,7 +301,7 @@ int main(int argc, char*argv[])
     
     
     // create the tree model
-    string tree_path = FileSystem::getPath("Xcode/obj/lowpolytree/Lowpoly_tree_sample.obj");
+    string tree_path = FileSystem::getPath("Xcode/obj/lowpolytree2/Tree low.obj");
     Model poly_tree(tree_path);
     
     
@@ -924,7 +924,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
 
             mat4 model = mat4(1.0f);
             model = glm::translate(model, vec3(x, y, z));
-            model = glm::scale(model, vec3(0.2f));
+            model = glm::scale(model, vec3(0.1f));
             modelMatrices[counter2] = model;
             counter2++;
         }
@@ -1001,11 +1001,11 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     glBindVertexArray(VAO);
     
     // terrian coordinates
-    
+    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+ 
     
     // EBO
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -1015,10 +1015,11 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     
     
     //texture coordinates
+     glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(float), &textureCoords[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+   
     
     
     
@@ -1035,16 +1036,16 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     GLuint modelViewProjection_terrain = glGetUniformLocation(shader.ID, "mvp");
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthMap);
-    
+
     glActiveTexture(GL_TEXTURE0 +  1);
     glBindTexture(GL_TEXTURE_2D, snowTextureID);
-    
+
     glActiveTexture(GL_TEXTURE0 + 2);
     glBindTexture(GL_TEXTURE_2D, sandTextureID);
     //
     glActiveTexture(GL_TEXTURE0 + 3);
     glBindTexture(GL_TEXTURE_2D, rockTextureID);
-    
+
     glActiveTexture(GL_TEXTURE0 + 4);
     glBindTexture(GL_TEXTURE_2D, grassTextureID);
     //
@@ -1063,7 +1064,7 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
             mat4 mvp = glm::mat4(1.0f);
             mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapZ / 2.0 + (mapZ - 1) * z));
             glUniformMatrix4fv(modelViewProjection_terrain, 1, GL_FALSE, &mvp[0][0]);
-            
+
             glBindVertexArray(VAO[x + z*xMapChunks]);
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);   // reset
@@ -1071,16 +1072,22 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
         }
     }
     
+
     shader.setBool("instanceOn", true);
+    
     if (object_model.textures_loaded.size() > 0)   // don't try to load a non-existant texture
         glBindTexture(GL_TEXTURE_2D, object_model.textures_loaded[0].id);
-    
+     shader.setInt("treeColor", 1);
     for (unsigned int i = 0; i < object_model.meshes.size(); i++)
     {
+         
         glBindVertexArray(object_model.meshes.at(i).VAO);
         glDrawElementsInstanced(GL_TRIANGLES, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
         glBindVertexArray(0);
+        
     }
+        shader.setInt("treeColor", 0);
+      
     shader.setBool("instanceOn", false);
     
 }
