@@ -7,10 +7,12 @@
 
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aUV;
+layout (location = 3) in mat4 aInstanceMatrix;
+
 
 //uniform matrices
 uniform mat4 mvp;
-uniform mat4 model;
+//uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 lightSpaceMatrix;
@@ -32,6 +34,7 @@ flat out vec3 flatFragPos;
 flat out vec4 flatFragPosLightSpace;
 
 
+uniform bool instanceOn;
 
 
 
@@ -40,14 +43,14 @@ void main()
 {
     //take the uniform newY to change the Y cordinate of the vertices
     vec3 calPos = aPos;
-
+    
     //update the change in Y coordinate
     float changeY = calPos.y * newY;
     calPos.y = calPos.y + changeY;
     
     //calculate normals here
-
-
+    
+    
     
     vertexUV = aUV;
     FragPos = vec3(mvp * vec4(calPos,1.0f));
@@ -55,8 +58,21 @@ void main()
     //set flat variables
     flatFragPos = FragPos;
     flatFragPosLightSpace =FragPosLightSpace;
-   
-    gl_Position = projection * view * mvp * vec4(calPos, 1.0f);
+    
+    
+    
+    mat4 matrixTotal;
+    
+    if (!instanceOn) {
+        matrixTotal = projection * view * mvp;
+        gl_Position = matrixTotal * vec4(aPos, 1.0f);
+    }
+    else {
+        matrixTotal = projection * view * aInstanceMatrix;
+        gl_Position = matrixTotal * vec4(aPos, 1.0f);
+    }
+    
+    //gl_Position = projection * view * mvp * vec4(calPos, 1.0f);
     
     
     
