@@ -49,6 +49,7 @@
 #include "SimplexNoise.h"
 #include "filesystem.h"
 #include "model.h"
+#include <unordered_map>
 
 
 
@@ -206,7 +207,6 @@ int main(int argc, char*argv[])
     
     
     //texture shader for grid, olaf
-    
     Shader textureShader(FileSystem::getPath("Source/shader-texture.vs").c_str(),FileSystem::getPath("Source/shader-texture.fs").c_str());
     Shader skyBoxShader(FileSystem::getPath("Source/skyBoxShader.vs").c_str(), FileSystem::getPath("Source/skyBoxShader.fs").c_str());
     //shader for simple shadows
@@ -296,8 +296,6 @@ int main(int argc, char*argv[])
     
     
     
-    
-    
     // textures
     textureShader.use();
     glUniform1i(glGetUniformLocation(textureShader.ID, "shadowMap"), 0);
@@ -332,21 +330,18 @@ int main(int argc, char*argv[])
     
     
     // Entering Main Loop
+    // ------------------
     while(!glfwWindowShouldClose(window))
     {
-        
-        
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         
-        if(updateMap) {
+        if(updateMap)
+        {
             createMap(poly_tree);
             updateMap = !updateMap;
-            
         }
-        
-        
         
         float dt = glfwGetTime() - lastFrameTime;
         lastFrameTime += dt;
@@ -544,7 +539,7 @@ int main(int argc, char*argv[])
         
         // Convert to spherical coordinates
         
-        const float cameraAngularSpeed = 50.0f;
+        const float cameraAngularSpeed = 10.0f;
         
         
         if(!GUICONTROL){
@@ -589,8 +584,6 @@ int main(int argc, char*argv[])
             }
             
             
-            
-            
         } else {
             float theta = radians(cameraHorizontalAngle);
             float phi = radians(cameraVerticalAngle);
@@ -609,9 +602,7 @@ int main(int argc, char*argv[])
                 viewMatrix = lookAt(position, cameraPosition, cameraUp);
             }
             
-            
         }
-        
         
         //these are the following keybindings to control the olaf, the camera and the world orientation, textures, lighting and shadows
         
@@ -718,7 +709,6 @@ int main(int argc, char*argv[])
         }
         
         
-        
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) // primative change to trianges
         {
             primativeRender = GL_TRIANGLES;
@@ -734,34 +724,19 @@ int main(int argc, char*argv[])
             primativeRender = GL_LINES;
         }
         
-        
-        
-        
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) //rotate Y axis of the world
         {
-            
             xTrans = xTrans + 0.001f;
-            if(xTrans >= 0.199) {
+            if(xTrans >= 0.199)
                 xTrans = 0.199;
-            }
-            
-            
         }
-        
         
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) // rotate Y axis of the world in the other orientation
         {
-            
             xTrans = xTrans - 0.001f;
-            
-            if(xTrans <= -0.99) {
+            if(xTrans <= -0.99)
                 xTrans = -0.99;
-            }
-            
         }
-        
-        
-        
         
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
@@ -777,8 +752,6 @@ int main(int argc, char*argv[])
             cameraFirstPerson = false;
         }
         
-        
-        
         textureShader.use();
         
         projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,600.0f);
@@ -792,105 +765,81 @@ int main(int argc, char*argv[])
         
     }
     
-    
-    
-    
     // Shutdown GLFW
     glfwTerminate();
     
     return 0;
 }
 
-
-
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    
-    
     if (key == GLFW_KEY_Q && action == GLFW_PRESS)
         flatOn = !flatOn;
-    
     
     if (key == GLFW_KEY_B && action == GLFW_PRESS)
         textureOn = !textureOn;
     
-    if (key == GLFW_KEY_TAB && action == GLFW_PRESS){
-        if(!GUICONTROL){
+    if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
+    {
+        if(!GUICONTROL)
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            
-        }else
-        {
+        else
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        }
         GUICONTROL =!GUICONTROL;
         show_demo_window = !show_demo_window;
     }
-    
 }
 
 
-
-
-
-void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& object_model) {
+void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& object_model)
+{
     vector<float> vertices;
     vector <int> indices(6 * (mapZ - 1) * (mapZ - 1));
     vector<float> textureCoords;
-    
-    
     
     float xSample =0;
     float zSample = 0;
     float amp  = 1;
     float freq = 1;
     
-    
     //create vertices and noise
     float  rangedNoise =0;
     
-    
-    
     for (int z = 0; z < mapZ ; z++)
-        for (int x = 0; x < mapX; x++) {
+        for (int x = 0; x < mapX; x++)
+        {
             vertices.push_back(x);
             textureCoords.push_back(x);
             amp  = 1;
             freq = 1;
             float noiseHeight = 0;
-            for (int i = 0; i < octaves; i++) {
-                
-                
+            for (int i = 0; i < octaves; i++)
+            {
                 //jagged
-                if(TerrainMode ==0){
+                if(TerrainMode ==0)
+                {
                     xSample = (xOffset * (mapX-1) + x-1)  / noiseScale * freq;
                     zSample = (zOffset * (mapZ-1) + z-1) / noiseScale * freq;
                 }
-                
                 //smooth
-                if(TerrainMode ==1) {
+                if(TerrainMode ==1)
+                {
                     xSample = (xOffset * (mapX-1) + x-1)  / noiseScale;
                     zSample = (zOffset * (mapZ-1) + z-1) / noiseScale;
                 }
-                
                 //block
-                if(TerrainMode ==2) {
+                if(TerrainMode ==2)
+                {
                     xSample = (xOffset * (mapX-1) + x-1)  / 32;
                     zSample = (zOffset * (mapZ-1) + z-1) / 32;
                 }
-                
-                
-                
                 float perlinValue = SimplexNoise::noise(xSample,zSample);
                 noiseHeight += perlinValue * amp;
                 
-                
                 amp  *= persistence;
                 freq *= lacunarity;
-                
-                
-                
-                
             }
+            
             rangedNoise = Remap(noiseHeight, -1.0, 1, 0, 1);
             
             vertices.push_back(rangedNoise * meshHeight);
@@ -899,97 +848,95 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
             
             float calc = rangedNoise * meshHeight;
             
-            
-            
-            
             heightPos[z][x]=calc;
-            
-            
         }
     
     // generate a large list of semi-random model transformation matrices
     // ------------------------------------------------------------------
-    //
-    //    // we only want to do this once!
-    if (VAO == 0) {
-        glm::mat4 *modelMatrices;
-        modelMatrices = new glm::mat4[number_of_trees];
-        vector<float> vertices_copy = vertices;
-        for ( int i = 0; i < 99; i++) {
-            vertices_copy.insert(vertices_copy.end(), vertices.begin(), vertices.end());
-        }
-        
-        int counter1 = 0;
-        for (int i = 0; i <zMapChunks; i++) {
-            for (int j = 0; j < xMapChunks; j++) {
-                for (int y = 0; y < mapZ; y++) {
-                    for (int x = 0; x < mapX; x++) {
-                        vertices_copy[counter1] = vertices_copy[counter1] + ((mapX - 1) * j);
-                        vertices_copy[counter1+2] = vertices_copy[counter1+2] + ((mapZ - 1) * i);
-                        counter1 += 3;
-                    }
-                }
-            }
-        }
-        //
-        int counter2 = 0;
-        while (counter2 < number_of_trees) {
-            int c = (rand() % (mapZ * mapX )) * 3; // random number that is less than vertices_copy.size() [4,915,200] and divisible by 3
-            float x = vertices_copy[c];
-            float y = vertices_copy[c+1];
-            float z = vertices_copy[c+2];
-            
-            
-            if (y > 1 && y < 16 )   { // matches the grass numbers in the fragshader
-                //
-                
-                mat4 model = mat4(1.0f);
-                model = glm::translate(model, vec3(x, y, z));
-                model = glm::scale(model, vec3(0.9f));
-                modelMatrices[counter2] = model;
-                counter2++;
-            }
-        }
-        //
-        //
-        //
-        //
-        //        // configure instanced array
-        //        // -------------------------
-        unsigned int buffer;
-        glGenBuffers(1, &buffer);
-        glBindBuffer(GL_ARRAY_BUFFER, buffer);
-        glBufferData(GL_ARRAY_BUFFER, (number_of_trees) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
-        // FIXME: ^ I don't know why, but if "number_of_trees" is too big (ie. greater than 500 or so), this ^^ breaks!
-        
-        //
-        //        // set transformation matrices as an instance vertex attribute (with divisor 1)
-        //        // ----------------------------------------------------------------------------
-        for (unsigned int i = 0; i < object_model.meshes.size(); i++)
-        {
-            unsigned int VAO = object_model.meshes[i].VAO;
-            glBindVertexArray(VAO);
-            // set attribute pointers for matrix (4 times vec4)
-            glEnableVertexAttribArray(4);
-            glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
-            glEnableVertexAttribArray(5);
-            glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
-            glEnableVertexAttribArray(6);
-            glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
-            glEnableVertexAttribArray(7);
-            glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
-            
-            glVertexAttribDivisor(4, 1);
-            glVertexAttribDivisor(5, 1);
-            glVertexAttribDivisor(6, 1);
-            glVertexAttribDivisor(7, 1);
-            
-            glBindVertexArray(0);
-        }
+    glm::mat4 *modelMatrices;
+    modelMatrices = new glm::mat4[number_of_trees];
+    vector<float> vertices_copy = vertices;
+    for ( int i = 0; i < 99; i++)
+    {
+        vertices_copy.insert(vertices_copy.end(), vertices.begin(), vertices.end());
     }
     
+    // TODO: these unordered_maps are not being used right now because the Chuncks are set to 1x1 ...
+    unordered_map<int, int> zlocations;
+    zlocations.insert(make_pair(0, 63));
+    zlocations.insert(make_pair(1, 190));
+    zlocations.insert(make_pair(2, 317));
+    zlocations.insert(make_pair(3, 444));
+    zlocations.insert(make_pair(4, 571));
+    zlocations.insert(make_pair(5, 698));
+    zlocations.insert(make_pair(6, 825));
+    zlocations.insert(make_pair(7, 952));
+    zlocations.insert(make_pair(8, 1079));
+    zlocations.insert(make_pair(9, -64));
     
+    unordered_map<int, int> xlocations;
+    xlocations.insert(make_pair(0, -64));
+    xlocations.insert(make_pair(1, 63));
+    xlocations.insert(make_pair(2, 190));
+    xlocations.insert(make_pair(3, 317));
+    xlocations.insert(make_pair(4, 444));
+    xlocations.insert(make_pair(5, 571));
+    xlocations.insert(make_pair(6, 698));
+    xlocations.insert(make_pair(7, 825));
+    xlocations.insert(make_pair(8, 952));
+    xlocations.insert(make_pair(9, 1079));
     
+    int counter = 0;
+    while (counter < number_of_trees) {
+        int c = (rand() % (mapZ * mapX)) * 3; // random number that is less than vertices_copy.size()[4,915,200] and divisible by 3
+        int feaf = c / vertices.size();
+        int xRand = feaf % 10;  // not used right now, but if it was "c = (rand() % (mapZ * mapX * 100)) * 3" above,
+        int zRand = feaf / 10;  // then can use these to
+        float x = vertices_copy[c];
+        float y = vertices_copy[c+1];
+        float z = vertices_copy[c+2];
+        
+        if (y < 1 || y > 16)    // matches the grass numbers in the fragshader
+            continue;
+        
+        mat4 model = mat4(1.0f);
+        model = glm::translate(model, vec3(x, y, z));
+        model = glm::scale(model, vec3(0.9f));
+        modelMatrices[counter] = model;
+        counter++;
+    }
+    
+    // configure instanced array
+    // -------------------------
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, (number_of_trees) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+    // FIXME: ^ I don't know why, but if "number_of_trees" is too big (ie. greater than 500 or so), this ^^ breaks!
+    
+    // set transformation matrices as an instance vertex attribute (with divisor 1)
+    // ----------------------------------------------------------------------------
+    for (unsigned int i = 0; i < object_model.meshes.size(); i++)
+    {
+        unsigned int VAO = object_model.meshes[i].VAO;
+        glBindVertexArray(VAO);
+        // set attribute pointers for matrix (4 times vec4)
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+        glEnableVertexAttribArray(7);
+        glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+        
+        glVertexAttribDivisor(4, 1);
+        glVertexAttribDivisor(5, 1);
+        glVertexAttribDivisor(6, 1);
+        glVertexAttribDivisor(7, 1);
+        
+        glBindVertexArray(0);
+    }
     
     //calculate indices
     int pointer = 0;
@@ -1010,10 +957,6 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
         }
     }
     
-    
-    
-    
-    
     // VAO and VBO generateion
     glGenBuffers(2, VBO);
     glGenBuffers(1, &EBO);
@@ -1026,13 +969,9 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     
-    
     // EBO
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(int), &indices[0], GL_STATIC_DRAW);
-    
-    
-    
     
     //texture coordinates
     glEnableVertexAttribArray(3);
@@ -1040,17 +979,9 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(float), &textureCoords[0], GL_STATIC_DRAW);
     glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     
-    
-    
-    
 }
 
-
-
-
 void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &cameraPosition, Model &object_model, Model &cloud) {
-    
-    
     
     shader.use();
     GLuint modelViewProjection_terrain = glGetUniformLocation(shader.ID, "mvp");
@@ -1072,12 +1003,10 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     glActiveTexture(GL_TEXTURE0+ 5);
     glBindTexture(GL_TEXTURE_2D, waterTextureID);
     
-    
-    
-    for (int z = 0; z < 3; z++) {
-        for (int x = 0; x < 3; x++) {
-            
-            
+    for (int z = 0; z < 3; z++)
+    {
+        for (int x = 0; x < 3; x++)
+        {
             mat4 mvp = glm::mat4(1.0f);
             mvp = translate(mvp, vec3( (mapX - 1) * x, 0.0, (mapZ - 1) * z));
             
@@ -1089,55 +1018,41 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
             
             shader.setInt("treeColor", 1);
             mat4 tree_mvp = glm::mat4(1.0f);
-            mat4 scaleSize = scale(tree_mvp, vec3(0.7f));
-            
-            
+            mat4 scaleSize = scale(tree_mvp, vec3(1.0f));
             
             float y = getHeight( x+36,  z+13);
-            mat4 treeTranslate =translate(tree_mvp, vec3( (mapX - 1) * x +36, 0.0, (mapZ - 1) * z+13));
+            mat4 treeTranslate =translate(tree_mvp, vec3((mapX - 1) * x +36, 0.0, (mapZ - 1) * z+13));
             tree_mvp = treeTranslate * scaleSize;
             
-            if(y>4) {
-                
+            if(y > 4)
+            {
                 shader.setMat4("mvp", tree_mvp);
                 object_model.Draw(shader);
-                
                 shader.setInt("treeColor", 0);
             }
-            
-            
         }
     }
     
     shader.setBool("instanceOn", true);
-    
     shader.setInt("treeColor", 1);
     for (unsigned int i = 0; i < object_model.meshes.size(); i++)
     {
-        
         glBindVertexArray(object_model.meshes.at(i).VAO);
         glDrawElementsInstanced(GL_TRIANGLES, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
         glBindVertexArray(0);
-        
     }
     
     shader.setInt("treeColor", 0);
-    
     shader.setBool("instanceOn", false);
     
-    if(!cameraFirstPerson){
+    if(!cameraFirstPerson)
+    {
         mat4 cloudmvp = translate(mat4(1.0f), vec3(cameraPosition.x+15,cameraPosition.y-4,cameraPosition.z+15))  *
         scale(mat4(1.0f), vec3(0.02f, 0.02f, 0.02f));
         
-        
         shader.setMat4("mvp", cloudmvp);
         cloud.Draw(shader);
-        
     }
-    
-    
-    
-    
 }
 
 //helper function to map values to stay within a range
@@ -1147,19 +1062,16 @@ float Remap (float value, float from1, float to1, float from2, float to2)
 }
 
 
-void createMap(Model &model) {
-    
-    for (int z = 0; z < zMapChunks; z++){
-        for (int x = 0; x < xMapChunks; x++) {
+void createMap(Model &model)
+{
+    for (int z = 0; z < zMapChunks; z++)
+    {
+        for (int x = 0; x < xMapChunks; x++)
+        {
             createTerrainGeometry(VAO[x + z*xMapChunks], x, z, model);
-            
         }
     }
 }
-
-
-
-
 
 
 float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos)
@@ -1172,62 +1084,40 @@ float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos)
 }
 
 
-float getHeight(float x, float z) {
-    
+float getHeight(float x, float z)
+{
     float terrainX = x -1;
     float terrainZ = z-1;
-    
-    
-    
     
     int height = mapX*xMapChunks;
     
     int gridSize = (mapX*xMapChunks) / height;
     
-    
     int gridX = floor(terrainX/gridSize);
     int gridZ = floor(terrainZ / gridSize);
     
-    
-    
-    
-    if(gridX >= (height-1)|| gridZ >= (height-1)|| gridX < 0 || gridZ <0) {
+    if(gridX >= (height-1)|| gridZ >= (height-1)|| gridX < 0 || gridZ <0)
         return 0;
-    }
     
     int xCoordMod =  (int)terrainX % mapZ;
     int zCoordMod = (int)terrainZ % mapZ;
     
-    
     float xCoord = (float)xCoordMod/(float)mapX;
     float zCoord = (float)zCoordMod/(float)mapZ;
     
-    
-    
-    
     float answer;
-    if(xCoord <= (1-zCoord)){
+    if(xCoord <= (1-zCoord))
+    {
         answer = barryCentric(glm::vec3(0, heightPos[gridZ][gridX], 0),
                               glm::vec3(1, heightPos[gridZ+1][gridX], 0), glm::vec3(0, heightPos[gridZ][gridX + 1], 1), glm::vec2(xCoord, zCoord));
-        
-    }else {
-        
+    }
+    else
+    {
         answer = barryCentric(glm::vec3(1, heightPos[gridZ+1][gridX], 0),
                               glm::vec3(1, heightPos[gridZ+1][gridX+1], 1), glm::vec3(0, heightPos[gridZ][gridX + 1], 1), glm::vec2(xCoord, zCoord));
-        
-        
-        
     }
     
-    
-    
-    
-    
     return answer;
-    
-    
-    
-    
 }
 
 
