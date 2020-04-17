@@ -255,8 +255,7 @@ int main(int argc, char*argv[])
     // Enable Backface culling
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    
+    glDepthFunc(GL_LESS);    
     //  glEnable(GL_FRAMEBUFFER_SRGB);
     
     // For frame time
@@ -401,10 +400,13 @@ int main(int argc, char*argv[])
         
         //this part is largely inspired by learnopengl's shadow tutorial and lab 8
         //render shadows from lights perspective
-        float near_plane = 1.0f, far_plane = 600.0f;
+//        float near_plane = 1.0f, far_plane = 7.5f;
+                float near_plane = 1.0f, far_plane = 600.0f;
         
         
         lightProjection = glm::perspective(glm::radians(130.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
+        
+//     lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
         
         
         lightView = glm::lookAt(lightpos, glm::vec3(0.0f), glm::vec3(0.0, 0.0, 1.0));
@@ -610,7 +612,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // camera zoom in
         {
             cameraPosition.z -= currentCameraSpeed * dt*40;
-            lightpos.z -= currentCameraSpeed * dt*40;
+//            lightpos.z -= currentCameraSpeed * dt*40;
             
             
         }
@@ -618,7 +620,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // camera zoom out
         {
             cameraPosition.z += currentCameraSpeed * dt*40;
-            lightpos.z += currentCameraSpeed * dt*40;
+//            lightpos.z += currentCameraSpeed * dt*40;
             
             
         }
@@ -628,7 +630,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ) // move camera to the left
         {
             cameraPosition.x -= currentCameraSpeed * dt*40;
-            lightpos.x -= currentCameraSpeed * dt*40;
+//            lightpos.x -= currentCameraSpeed * dt*40;
             
             
         }
@@ -636,7 +638,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // move camera to the right
         {
             cameraPosition.x += currentCameraSpeed * dt*40;
-            lightpos.x += currentCameraSpeed * dt*40;
+//            lightpos.x += currentCameraSpeed * dt*40;
             
         }
         

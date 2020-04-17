@@ -75,9 +75,9 @@ void main()
     
     //calculate normals here
     
-    objNormal = aNormal;
+//    objNormal = aNormal;
     
-    Normal = mat3(transpose(inverse(mvp))) * aNormal;
+    objNormal = mat3(transpose(inverse(mvp))) * aNormal;
     
     
     vertexUV = aUV;
@@ -96,6 +96,7 @@ void main()
         gl_Position = matrixTotal * vec4(calPos, 1.0f);
     }
     else {
+        
         matrixTotal = projection * view * aInstanceMatrix;
         gl_Position = matrixTotal * vec4(calPos, 1.0f);
     }
