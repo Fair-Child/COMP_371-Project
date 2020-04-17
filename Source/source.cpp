@@ -115,6 +115,7 @@ vec3 cameraLookAt (0.810638f,-0.188706f, 0.554307f);
 
 vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
+
 //primatative rendering options
 int primativeRender = GL_TRIANGLES;
 
@@ -125,7 +126,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void renderLight(const GLuint &lamp_Shader);
 float Remap (float value, float from1, float to1, float from2, float to2);
 void createMap(Model &model);
-void renderTerrain(vector <GLuint> &VAO , Shader &shader,  int &nIndices,vec3 &cameraPosition, Model &model);
+void renderTerrain(vector <GLuint> &VAO , Shader &shader,  int &nIndices,vec3 &cameraPosition, Model &model, Model &cloud);
 void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model &model);
 float getHeight(float x, float z);
 
@@ -211,9 +212,7 @@ int main(int argc, char*argv[])
     //shader for simple shadows
     Shader simpleShadow(FileSystem::getPath("Source/simple-shadow-shader.vs").c_str(),FileSystem::getPath("Source/simple-shadow-shader.fs").c_str());
     
-    //this allows us to send an out from the vertex shader to our feedback buffer
-    const GLchar* feedbackVaryings[] = { "calPos" };
-    glTransformFeedbackVaryings(textureShader.ID, 1, feedbackVaryings, GL_INTERLEAVED_ATTRIBS);
+    
     
     //skybox VAO and VBO
     
@@ -314,37 +313,22 @@ int main(int argc, char*argv[])
     Model poly_tree(tree_path);
     
     
-    //create map but for ask for input variables for noise
+    //create cloud model
+    string cloud_path = FileSystem::getPath("Xcode/obj/cloud.obj");
+    Model cloud(cloud_path);
+    
+    
+    //create map
     createMap(poly_tree);
     
-    //this checks for the max height so it adjusts our collision detection
     
-    
-    
-    
-    
+    //imGUI setup Config
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    
-    // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
-    
-    // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    
-    
-    
-    
-    
-    
     ImGui_ImplOpenGL3_Init(glsl_version);
-    
-    
-    
     
     
     // Entering Main Loop
@@ -361,10 +345,6 @@ int main(int argc, char*argv[])
             updateMap = !updateMap;
             
         }
-        
-        
-        
-        
         
         
         
@@ -389,8 +369,6 @@ int main(int argc, char*argv[])
         
         // clear the color and depth buffer at the beginning of each loop
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        
         
         
         //texture shader
@@ -440,7 +418,7 @@ int main(int argc, char*argv[])
         GLuint lightSpaceMatrixSimple = glGetUniformLocation(simpleShadow.ID, "lightSpaceMatrix");
         glUniformMatrix4fv(lightSpaceMatrixSimple, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
         
-        renderTerrain(VAO, simpleShadow, nIndices, cameraPosition, poly_tree);
+        renderTerrain(VAO, simpleShadow, nIndices, cameraPosition, poly_tree, cloud);
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // reset viewport
@@ -478,7 +456,7 @@ int main(int argc, char*argv[])
         
         
         glUniform1f(glGetUniformLocation(textureShader.ID, "newY"), xTrans);
-        renderTerrain(VAO,textureShader, nIndices, cameraPosition, poly_tree);
+        renderTerrain(VAO,textureShader, nIndices, cameraPosition, poly_tree, cloud);
         
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyBoxShader.use();
@@ -499,11 +477,7 @@ int main(int argc, char*argv[])
         
         if (show_demo_window)
             
-            
-            // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
-            
-            
             
             ImGui::Begin("World Control");                          // Create a window called "Hello, world!" and append into it.
             
@@ -540,11 +514,6 @@ int main(int argc, char*argv[])
                 textureOn=!textureOn;
                 
             }
-            
-            
-            
-            
-            
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
@@ -552,18 +521,16 @@ int main(int argc, char*argv[])
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         
-        // End Frame
+        
         
         float heights =  getHeight(cameraPosition.x,cameraPosition.z);
         
-        //        cout<<"cam.x:"<<cameraPosition.x<<" cam.y:"<<cameraPosition.y<<" cam.z:"<<cameraPosition.z<<endl;
         
         
         if(cameraPosition.y  + xTrans< (heights +5.99 )) {
             cameraPosition.y = (heights  +5.99) +xTrans;
             
         }
-        
         
         
         double mousePosX, mousePosY;
@@ -584,6 +551,15 @@ int main(int argc, char*argv[])
             cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
             cameraVerticalAngle   -= dy * cameraAngularSpeed * dt;
             
+            float theta = radians(cameraHorizontalAngle);
+            float phi = radians(cameraVerticalAngle);
+            
+            cameraLookAt = vec3(cosf(phi)*cosf(theta), sinf(phi), -cosf(phi)*sinf(theta));
+            vec3 cameraSideVector = cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
+            normalize(cameraSideVector);
+            
+            
+            
             
             cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
             if (cameraHorizontalAngle > 360)
@@ -595,12 +571,7 @@ int main(int argc, char*argv[])
                 cameraHorizontalAngle += 360;
             }
             
-            float theta = radians(cameraHorizontalAngle);
-            float phi = radians(cameraVerticalAngle);
             
-            cameraLookAt = vec3(cosf(phi)*cosf(theta), sinf(phi), -cosf(phi)*sinf(theta));
-            vec3 cameraSideVector = cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
-            normalize(cameraSideVector);
             
             if (cameraFirstPerson)
             {
@@ -1077,7 +1048,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
 
 
 
-void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &cameraPosition, Model &object_model) {
+void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &cameraPosition, Model &object_model, Model &cloud) {
     
     
     
@@ -1153,6 +1124,19 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     shader.setInt("treeColor", 0);
     
     shader.setBool("instanceOn", false);
+    
+    if(!cameraFirstPerson){
+        mat4 cloudmvp = translate(mat4(1.0f), vec3(cameraPosition.x+15,cameraPosition.y-4,cameraPosition.z+15))  *
+        scale(mat4(1.0f), vec3(0.02f, 0.02f, 0.02f));
+        
+        
+        shader.setMat4("mvp", cloudmvp);
+        cloud.Draw(shader);
+        
+    }
+    
+    
+    
     
 }
 

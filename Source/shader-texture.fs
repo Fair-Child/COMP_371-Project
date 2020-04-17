@@ -34,6 +34,10 @@ uniform sampler2D shadowMap;
 //obj textures
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
+uniform sampler2D texture_normal1;
+uniform sampler2D texture_height1;
+
+
 
 //bools
 uniform  bool textureOn;
@@ -195,10 +199,6 @@ void main()
         FragColor = vec4( texture(texture_specular1, vertexUV));
                 
      
-       
-        
-
-        
     
     }
 
