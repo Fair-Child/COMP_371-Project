@@ -38,6 +38,8 @@ public:
     /*  Model Data */
     vector<Texture> textures_loaded;    // stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     vector<Mesh> meshes;
+    vector<int> uniformIndexVector;
+    vector <int> materialSizeVector;
     string directory;
     bool gammaCorrection;
     
@@ -53,6 +55,23 @@ public:
     {
         for(unsigned int i = 0; i < meshes.size(); i++)
             meshes[i].Draw(shader);
+    }
+    
+    vector<int> getMaterialSize()
+      {
+          for(unsigned int i = 0; i < meshes.size(); i++) {
+              materialSizeVector.push_back( meshes[i].getMaterialSize());
+          }
+          return materialSizeVector;
+      }
+    
+    vector<int> getUniformIndex()
+    {
+        for(unsigned int i = 0; i < meshes.size(); i++){
+            uniformIndexVector.push_back(meshes[i].getUniformIndex());
+            
+        }
+        return uniformIndexVector;
     }
     
 private:
@@ -158,6 +177,16 @@ private:
         // specular: texture_specularN
         // normal: texture_normalN
         
+        Material mat;
+        aiColor3D color;
+               material->Get(AI_MATKEY_COLOR_AMBIENT, color);
+               mat.Ka = glm::vec4(color.r, color.g, color.b,1.0);
+               material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+               mat.Kd = glm::vec4(color.r, color.g, color.b,1.0);
+               material->Get(AI_MATKEY_COLOR_SPECULAR, color);
+               mat.Ks = glm::vec4(color.r, color.g, color.b,1.0);
+        
+        
         // 1. diffuse maps
         vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
@@ -172,7 +201,7 @@ private:
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
         
         // return a mesh object created from the extracted mesh data
-        return Mesh(vertices, indices, textures);
+        return Mesh(vertices, indices, textures, mat);
     }
     
     // checks all material textures of a given type and loads the textures if they're not loaded yet.

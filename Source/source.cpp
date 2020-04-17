@@ -102,8 +102,8 @@ vector<GLuint> VAO(100);
 //params to start
 const int xMapChunks = 1;
 const int zMapChunks = 1;;
-const int mapX = 1024;
-const int mapZ = 1024;
+const int mapX = 512;
+const int mapZ = 512;
 int nIndices = mapX * mapZ * 6;
 float heightPos [mapX*xMapChunks][mapZ*zMapChunks];
 
@@ -307,7 +307,8 @@ int main(int argc, char*argv[])
     
     
     // create the tree model
-    string tree_path = FileSystem::getPath("Xcode/obj/Tree_obj/tree.obj");
+//    string tree_path = FileSystem::getPath("Xcode/obj/Tree_obj/tree.obj");
+            string tree_path = FileSystem::getPath("Xcode/obj/lowpolytree/Lowpoly_tree_sample.obj");
     Model poly_tree(tree_path);
     
     
@@ -901,7 +902,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
         
         mat4 model = mat4(1.0f);
         model = glm::translate(model, vec3(x, y, z));
-        model = glm::scale(model, vec3(0.9f));
+        model = glm::scale(model, vec3(0.15f));
         modelMatrices[counter] = model;
         counter++;
     }
@@ -974,10 +975,10 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(int), &indices[0], GL_STATIC_DRAW);
     
     //texture coordinates
-    glEnableVertexAttribArray(3);
+    glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(float), &textureCoords[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     
 }
 
@@ -1003,9 +1004,9 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     glActiveTexture(GL_TEXTURE0+ 5);
     glBindTexture(GL_TEXTURE_2D, waterTextureID);
     
-    for (int z = 0; z < 3; z++)
+    for (int z = 0; z < zMapChunks; z++)
     {
-        for (int x = 0; x < 3; x++)
+        for (int x = 0; x < xMapChunks; x++)
         {
             mat4 mvp = glm::mat4(1.0f);
             mvp = translate(mvp, vec3( (mapX - 1) * x, 0.0, (mapZ - 1) * z));
@@ -1015,31 +1016,37 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
             glBindVertexArray(VAO[x + z*xMapChunks]);
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);   // reset
-            
-            shader.setInt("treeColor", 1);
-            mat4 tree_mvp = glm::mat4(1.0f);
-            mat4 scaleSize = scale(tree_mvp, vec3(1.0f));
-            
-            float y = getHeight( x+36,  z+13);
-            mat4 treeTranslate =translate(tree_mvp, vec3((mapX - 1) * x +36, 0.0, (mapZ - 1) * z+13));
-            tree_mvp = treeTranslate * scaleSize;
-            
-            if(y > 4)
-            {
-                shader.setMat4("mvp", tree_mvp);
-                object_model.Draw(shader);
-                shader.setInt("treeColor", 0);
-            }
+
         }
     }
     
+    
+
+    
     shader.setBool("instanceOn", true);
     shader.setInt("treeColor", 1);
+    
+    
+
+    
+    
+    
+    
     for (unsigned int i = 0; i < object_model.meshes.size(); i++)
     {
+        glActiveTexture(GL_TEXTURE0);
+        if(i % 2 ==0){
+        glBindTexture(GL_TEXTURE_2D,8);
+        } else {
+            glBindTexture(GL_TEXTURE_2D,9);
+        }
+     
         glBindVertexArray(object_model.meshes.at(i).VAO);
+        glBindBufferRange(GL_UNIFORM_BUFFER,0, object_model.getUniformIndex().at(i),0,object_model.getMaterialSize().at(i));
         glDrawElementsInstanced(GL_TRIANGLES, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
         glBindVertexArray(0);
+        
+         
     }
     
     shader.setInt("treeColor", 0);

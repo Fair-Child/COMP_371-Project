@@ -37,6 +37,11 @@ uniform sampler2D texture_specular1;
 uniform sampler2D texture_normal1;
 uniform sampler2D texture_height1;
 
+//mat in
+in vec4 Ambient;
+in vec4 Diffuse;
+in vec4 Specular;
+
 
 
 //bools
@@ -195,9 +200,13 @@ void main()
     
     if(treeColor) {
        
+        if(textureOn) {
+            
+        FragColor = vec4( texture(texture_diffuse1, vertexUV));
+        } else if(!textureOn) {
+             FragColor = vec4(Diffuse.rgb,1.0f);
+        }
 
-        FragColor = vec4( texture(texture_specular1, vertexUV));
-                
      
     
     }
