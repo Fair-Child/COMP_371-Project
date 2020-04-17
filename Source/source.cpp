@@ -133,7 +133,7 @@ float getHeight(float x, float z);
 
 
 // model
-const int number_of_trees = 500;    // FIXME: This cannot go higher than 500! Don't know why!
+const int number_of_trees = 800;
 
 
 //noise options
@@ -353,10 +353,6 @@ int main(int argc, char*argv[])
         glfwGetFramebufferSize(window, &mac_width, &mac_height);
         
         
-        //        projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,300.0f);
-        //        viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt,cameraUp );
-        //        viewMatrix = viewMatrix * WorldTransformMatrix;
-        
         //setting up the MVP of the world so I can place our objects within
         modelViewProjection = projectionMatrix * viewMatrix * modelMatrix;
         
@@ -367,28 +363,23 @@ int main(int argc, char*argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         
-        //texture shader
+        // texture shader
         textureShader.use();
         
-        //set view and projection materix in shader
+        // set view and projection materix in shader
         GLuint viewMatrix_texture = glGetUniformLocation(textureShader.ID, "view");
         GLuint projectionMatrix_texture = glGetUniformLocation(textureShader.ID, "projection");
         GLuint normalLook = glGetUniformLocation(textureShader.ID, "eyes");
         glUniform3f(normalLook, cameraPosition.x,cameraPosition.y,cameraPosition.z);
         
         
-        //        glUniformMatrix4fv(viewMatrix_texture, 1, GL_FALSE, &viewMatrix[0][0]);
-        //        glUniformMatrix4fv(projectionMatrix_texture, 1, GL_FALSE, &projectionMatrix[0][0]);
-        
-        
-        
-        //            //set light and view position
+        // set light and view position
         GLuint lightPositionTexture = glGetUniformLocation(textureShader.ID, "lightPos");
         GLuint viewPositionTexture = glGetUniformLocation(textureShader.ID, "viewPos");
         glUniform3f(lightPositionTexture, lightpos.x,lightpos.y,lightpos.z);
         glUniform3f(viewPositionTexture, cameraPosition.x,cameraPosition.y,cameraPosition.z);
         
-        //set lightColor for textureShader
+        // set lightColor for textureShader
         GLuint lightColor = glGetUniformLocation(textureShader.ID, "lightColor");
         glUniform3f(lightColor, 1.0f,1.0f,1.0f);
         
@@ -399,8 +390,8 @@ int main(int argc, char*argv[])
         glClear(GL_DEPTH_BUFFER_BIT);
         
         
-        //this part is largely inspired by learnopengl's shadow tutorial and lab 8
-        //render shadows from lights perspective
+        // this part is largely inspired by learnopengl's shadow tutorial and lab 8
+        // render shadows from lights perspective
         float near_plane = 1.0f, far_plane = 600.0f;
         
         
@@ -425,14 +416,13 @@ int main(int argc, char*argv[])
         glViewport(0, 0, mac_width, mac_height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        //use textureshader to render the scene, and set the  boolean in the fragment shader to render wit shadows, if shadows aren't enabled then do it without
+        // use textureshader to render the scene, and set the  boolean in the fragment shader to render wit shadows, if shadows aren't enabled then do it without
         textureShader.use();
         GLuint lightSpaceMatrixShader = glGetUniformLocation(textureShader.ID, "lightSpaceMatrix");
         glUniformMatrix4fv(lightSpaceMatrixShader, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
         
         
-        //sets textures and flat shading on and off
-        
+        // sets textures and flat shading on and off
         glUniform1ui(glGetUniformLocation(textureShader.ID, "textureOn"), 1);
         
         if(textureOn) {
@@ -856,46 +846,13 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     // ------------------------------------------------------------------
     glm::mat4 *modelMatrices;
     modelMatrices = new glm::mat4[number_of_trees];
-    vector<float> vertices_copy = vertices;
-    for ( int i = 0; i < 99; i++)
-    {
-        vertices_copy.insert(vertices_copy.end(), vertices.begin(), vertices.end());
-    }
-    
-    // TODO: these unordered_maps are not being used right now because the Chuncks are set to 1x1 ...
-    unordered_map<int, int> zlocations;
-    zlocations.insert(make_pair(0, 63));
-    zlocations.insert(make_pair(1, 190));
-    zlocations.insert(make_pair(2, 317));
-    zlocations.insert(make_pair(3, 444));
-    zlocations.insert(make_pair(4, 571));
-    zlocations.insert(make_pair(5, 698));
-    zlocations.insert(make_pair(6, 825));
-    zlocations.insert(make_pair(7, 952));
-    zlocations.insert(make_pair(8, 1079));
-    zlocations.insert(make_pair(9, -64));
-    
-    unordered_map<int, int> xlocations;
-    xlocations.insert(make_pair(0, -64));
-    xlocations.insert(make_pair(1, 63));
-    xlocations.insert(make_pair(2, 190));
-    xlocations.insert(make_pair(3, 317));
-    xlocations.insert(make_pair(4, 444));
-    xlocations.insert(make_pair(5, 571));
-    xlocations.insert(make_pair(6, 698));
-    xlocations.insert(make_pair(7, 825));
-    xlocations.insert(make_pair(8, 952));
-    xlocations.insert(make_pair(9, 1079));
     
     int counter = 0;
     while (counter < number_of_trees) {
         int c = (rand() % (mapZ * mapX)) * 3; // random number that is less than vertices_copy.size()[4,915,200] and divisible by 3
-        int feaf = c / vertices.size();
-        int xRand = feaf % 10;  // not used right now, but if it was "c = (rand() % (mapZ * mapX * 100)) * 3" above,
-        int zRand = feaf / 10;  // then can use these to
-        float x = vertices_copy[c];
-        float y = vertices_copy[c+1];
-        float z = vertices_copy[c+2];
+        float x = vertices[c];
+        float y = vertices[c+1];
+        float z = vertices[c+2];
         
         if (y < 1 || y > 16)    // matches the grass numbers in the fragshader
             continue;
@@ -903,6 +860,8 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
         mat4 model = mat4(1.0f);
         model = glm::translate(model, vec3(x, y, z));
         model = glm::scale(model, vec3(0.15f));
+        float rotAngle = (rand() % 360);
+        model = glm::rotate(model, rotAngle, glm::vec3(0.0f, 1.0f, 0.0f));
         modelMatrices[counter] = model;
         counter++;
     }
@@ -913,7 +872,6 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glBufferData(GL_ARRAY_BUFFER, (number_of_trees) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
-    // FIXME: ^ I don't know why, but if "number_of_trees" is too big (ie. greater than 500 or so), this ^^ breaks!
     
     // set transformation matrices as an instance vertex attribute (with divisor 1)
     // ----------------------------------------------------------------------------
@@ -1035,18 +993,15 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     for (unsigned int i = 0; i < object_model.meshes.size(); i++)
     {
         glActiveTexture(GL_TEXTURE0);
-        if(i % 2 ==0){
-        glBindTexture(GL_TEXTURE_2D,8);
-        } else {
+        if (i % 2 == 0)
+            glBindTexture(GL_TEXTURE_2D,8);
+        else
             glBindTexture(GL_TEXTURE_2D,9);
-        }
      
         glBindVertexArray(object_model.meshes.at(i).VAO);
         glBindBufferRange(GL_UNIFORM_BUFFER,0, object_model.getUniformIndex().at(i),0,object_model.getMaterialSize().at(i));
         glDrawElementsInstanced(GL_TRIANGLES, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
         glBindVertexArray(0);
-        
-         
     }
     
     shader.setInt("treeColor", 0);
