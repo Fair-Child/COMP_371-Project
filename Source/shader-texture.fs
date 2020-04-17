@@ -32,7 +32,8 @@ uniform sampler2D waterTexture;
 uniform sampler2D shadowMap;
 
 //obj textures
-uniform sampler2D texture_diffuse;
+uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_specular1;
 
 //bools
 uniform  bool textureOn;
@@ -82,6 +83,7 @@ void main()
     
     //    calculate the normals here!
       vec3 result;
+//    vec3 Normal = Normal;
 
     if(flatOn) {
          vec3 Normal = normalize( cross( dFdx( flatFragPos.xyz ), dFdy( flatFragPos.xyz ) ) );
@@ -190,7 +192,7 @@ void main()
     if(treeColor) {
        
 
-        FragColor = vec4(1.0f);
+        FragColor = vec4( texture(texture_specular1, vertexUV));
                 
      
        

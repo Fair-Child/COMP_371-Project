@@ -18,12 +18,12 @@
 //-- these links are what i used for help understanding heightmap and noise tiling (making the noise link up at the edges!)
 // -https://pdfs.semanticscholar.org/5e95/c1c36a07a2919c3da123f17f9d408a1ea6a5.pdf
 // - http://libnoise.sourceforge.net/noisegen/index.html
-// - DAVID WOLF openGL 4.0 shading language cookbook page 269-270 
+// - DAVID WOLF openGL 4.0 shading language cookbook page 269-270
 // - chunk mapping https://en.wikibooks.org/wiki/OpenGL_Programming/Glescraft_1
 // - thinmatrix help https://www.youtube.com/watch?v=qChQrNWU9Xw&list=PLRIWtICgwaX0u7Rf9zkZhLoLuZVfUksDP&index=37
 
 //SimeplexNoise is a library https://github.com/SRombauts/SimplexNoise
-//It created by Sébastien Rombauts
+//It  was created by Sébastien Rombauts
 
 
 
@@ -53,6 +53,7 @@
 
 
 
+
 //define namespaces for glm and c++ std
 using namespace glm;
 using namespace std;
@@ -66,16 +67,15 @@ bool GUICONTROL = true;
 bool flatOn = false;
 bool updateMap =false;
 bool show_demo_window = true;
+bool cameraFirstPerson = true;
 
 int TerrainMode = 0;
 
 
 
-
 vec3 lightpos (149.0f, 38.0f,151.0f);
 
-double lastTime2 = glfwGetTime();
-int nbFrames = 0;
+
 int counter =0;
 
 //worldspace matrix
@@ -99,14 +99,17 @@ GLuint waterTextureID;
 vector<GLuint> VAO(100);
 
 //params to start
-const int xMapChunks = 10;
-const int zMapChunks = 10;
-const int mapX = 128;
-const int mapZ = 128;
+const int xMapChunks = 1;
+const int zMapChunks = 1;;
+const int mapX = 1024;
+const int mapZ = 1024;
 int nIndices = mapX * mapZ * 6;
+float heightPos [mapX*xMapChunks][mapZ*zMapChunks];
 
 //camera info
-vec3 cameraPosition(0.0f,43.0f,30.0f);
+//vec3 cameraPosition(0.0f,43.0f,30.0f);
+vec3 cameraPosition(0.0f,43.0f,0.0f);
+
 //vec3 cameraLookAt(0.0f, 0.0f, 0.0f);
 vec3 cameraLookAt (0.810638f,-0.188706f, 0.554307f);
 
@@ -124,10 +127,11 @@ float Remap (float value, float from1, float to1, float from2, float to2);
 void createMap(Model &model);
 void renderTerrain(vector <GLuint> &VAO , Shader &shader,  int &nIndices,vec3 &cameraPosition, Model &model);
 void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model &model);
+float getHeight(float x, float z);
 
 
 // model
-const int number_of_trees = 400;    // FIXME: This cannot go higher than 500! Don't know why!
+const int number_of_trees = 500;    // FIXME: This cannot go higher than 500! Don't know why!
 
 
 //noise options
@@ -139,7 +143,10 @@ float lacunarity = 2;
 float xTrans = 0;
 
 GLuint VBO[2], EBO;
-vector  <float> heights;
+
+float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos);
+
+
 
 
 int main(int argc, char*argv[])
@@ -149,6 +156,8 @@ int main(int argc, char*argv[])
     srand( static_cast<unsigned int>(time(nullptr)));
     
     float  fovAngle = 45.0f;
+    
+    
     
     
     // Initialize GLFW and OpenGL version
@@ -301,7 +310,7 @@ int main(int argc, char*argv[])
     
     
     // create the tree model
-    string tree_path = FileSystem::getPath("Xcode/obj/lowpolytree2/Tree low.obj");
+    string tree_path = FileSystem::getPath("Xcode/obj/Tree_obj/tree.obj");
     Model poly_tree(tree_path);
     
     
@@ -309,7 +318,6 @@ int main(int argc, char*argv[])
     createMap(poly_tree);
     
     //this checks for the max height so it adjusts our collision detection
-    float maxHeight = *max_element(heights.begin(), heights.end());
     
     
     
@@ -351,7 +359,7 @@ int main(int argc, char*argv[])
         if(updateMap) {
             createMap(poly_tree);
             updateMap = !updateMap;
-            cout<<TerrainMode<<endl;
+            
         }
         
         
@@ -369,9 +377,9 @@ int main(int argc, char*argv[])
         glfwGetFramebufferSize(window, &mac_width, &mac_height);
         
         
-        projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,300.0f);
-        viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt,cameraUp );
-        viewMatrix = viewMatrix * WorldTransformMatrix;
+        //        projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,300.0f);
+        //        viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt,cameraUp );
+        //        viewMatrix = viewMatrix * WorldTransformMatrix;
         
         //setting up the MVP of the world so I can place our objects within
         modelViewProjection = projectionMatrix * viewMatrix * modelMatrix;
@@ -395,8 +403,8 @@ int main(int argc, char*argv[])
         glUniform3f(normalLook, cameraPosition.x,cameraPosition.y,cameraPosition.z);
         
         
-        glUniformMatrix4fv(viewMatrix_texture, 1, GL_FALSE, &viewMatrix[0][0]);
-        glUniformMatrix4fv(projectionMatrix_texture, 1, GL_FALSE, &projectionMatrix[0][0]);
+        //        glUniformMatrix4fv(viewMatrix_texture, 1, GL_FALSE, &viewMatrix[0][0]);
+        //        glUniformMatrix4fv(projectionMatrix_texture, 1, GL_FALSE, &projectionMatrix[0][0]);
         
         
         
@@ -488,27 +496,7 @@ int main(int argc, char*argv[])
         glDepthMask(GL_TRUE);
         
         
-        //collision detection for camera
-        if(maxHeight+3.199  > cameraPosition.y) {
-            cameraPosition.y +=4;
-        }
         
-        if(fovAngle <4) {
-            fovAngle =5;
-        }
-        
-        //fps printing for debugging
-        double currentTime2 = glfwGetTime();
-        nbFrames++;
-        if ( currentTime2 - lastTime2 >= 1.0 ){ // If last prinf() was more than 1 sec ago
-            // printf and reset timer
-            //                                         printf("%f ms/frame\n", 1000.0/double(nbFrames));
-            //                                            printf("%f fps\n", double(nbFrames));
-            nbFrames = 0;
-            lastTime2 += 1.0;
-            
-            
-        }
         if (show_demo_window)
             
             
@@ -566,13 +554,15 @@ int main(int argc, char*argv[])
         
         // End Frame
         
+        float heights =  getHeight(cameraPosition.x,cameraPosition.z);
         
-        //this part here which controls the camera via the mouse X,Y inputs
-        //it is edited and adapted from my solution to lab 4
-        
-        
+        //        cout<<"cam.x:"<<cameraPosition.x<<" cam.y:"<<cameraPosition.y<<" cam.z:"<<cameraPosition.z<<endl;
         
         
+        if(cameraPosition.y  + xTrans< (heights +5.99 )) {
+            cameraPosition.y = (heights  +5.99) +xTrans;
+            
+        }
         
         
         
@@ -612,9 +602,45 @@ int main(int argc, char*argv[])
             vec3 cameraSideVector = cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
             normalize(cameraSideVector);
             
+            if (cameraFirstPerson)
+            {
+                viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
+            }
+            else
+            {
+                // Position of the camera is on the sphere looking at the point of interest (cameraPosition)
+                float radius = 5.0f;
+                vec3 position = cameraPosition - vec3(radius * cosf(phi)*cosf(theta),
+                                                      radius * sinf(phi),
+                                                      -radius * cosf(phi)*sinf(theta));
+                
+                viewMatrix = lookAt(position, cameraPosition, cameraUp);
+            }
+            
+            
+            
+            
+        } else {
+            float theta = radians(cameraHorizontalAngle);
+            float phi = radians(cameraVerticalAngle);
+            if (cameraFirstPerson)
+            {
+                viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
+            }
+            else
+            {
+                // Position of the camera is on the sphere looking at the point of interest (cameraPosition)
+                float radius = 5.0f;
+                vec3 position = cameraPosition - vec3(radius * cosf(phi)*cosf(theta),
+                                                      radius * sinf(phi),
+                                                      -radius * cosf(phi)*sinf(theta));
+                
+                viewMatrix = lookAt(position, cameraPosition, cameraUp);
+            }
             
             
         }
+        
         
         //these are the following keybindings to control the olaf, the camera and the world orientation, textures, lighting and shadows
         
@@ -766,15 +792,28 @@ int main(int argc, char*argv[])
         
         
         
-        
-        
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
         
         
+        if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) // move camera down
+        {
+            cameraFirstPerson = true;
+        }
         
-        viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
+        if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) // move camera down
+        {
+            cameraFirstPerson = false;
+        }
+        
+        
+        
+        textureShader.use();
+        
         projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,600.0f);
+        
+        glUniformMatrix4fv(viewMatrix_texture, 1, GL_FALSE, &viewMatrix[0][0]);
+        glUniformMatrix4fv(projectionMatrix_texture, 1, GL_FALSE, &projectionMatrix[0][0]);
         
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -876,21 +915,31 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
                 
                 amp  *= persistence;
                 freq *= lacunarity;
+                
+                
+                
+                
             }
             rangedNoise = Remap(noiseHeight, -1.0, 1, 0, 1);
             
-            heights.push_back(rangedNoise * meshHeight);
             vertices.push_back(rangedNoise * meshHeight);
             vertices.push_back(z);
             textureCoords.push_back(z);
+            
+            float calc = rangedNoise * meshHeight;
+            
+            
+            
+            
+            heightPos[z][x]=calc;
             
             
         }
     
     // generate a large list of semi-random model transformation matrices
     // ------------------------------------------------------------------
-    
-    // we only want to do this once!
+    //
+    //    // we only want to do this once!
     if (VAO == 0) {
         glm::mat4 *modelMatrices;
         modelMatrices = new glm::mat4[number_of_trees];
@@ -898,70 +947,72 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
         for ( int i = 0; i < 99; i++) {
             vertices_copy.insert(vertices_copy.end(), vertices.begin(), vertices.end());
         }
-
+        
         int counter1 = 0;
         for (int i = 0; i <zMapChunks; i++) {
             for (int j = 0; j < xMapChunks; j++) {
                 for (int y = 0; y < mapZ; y++) {
                     for (int x = 0; x < mapX; x++) {
-                        vertices_copy[counter1] = vertices_copy[counter1] + (-mapX / 2.0 + (mapX - 1) * j);
-                        vertices_copy[counter1+2] = vertices_copy[counter1+2] + (-mapZ / 2.0 + (mapZ - 1) * i);
+                        vertices_copy[counter1] = vertices_copy[counter1] + ((mapX - 1) * j);
+                        vertices_copy[counter1+2] = vertices_copy[counter1+2] + ((mapZ - 1) * i);
                         counter1 += 3;
                     }
                 }
             }
         }
-
+        //
         int counter2 = 0;
         while (counter2 < number_of_trees) {
-            int c = (rand() % (mapZ * mapX * 100)) * 3; // random number that is less than vertices_copy.size() [4,915,200] and divisible by 3
+            int c = (rand() % (mapZ * mapX )) * 3; // random number that is less than vertices_copy.size() [4,915,200] and divisible by 3
             float x = vertices_copy[c];
             float y = vertices_copy[c+1];
             float z = vertices_copy[c+2];
-
-            if (y < 6 || y > 18)    // matches the grass numbers in the fragshader
-                continue;
-
-            mat4 model = mat4(1.0f);
-            model = glm::translate(model, vec3(x, y, z));
-            model = glm::scale(model, vec3(0.1f));
-            modelMatrices[counter2] = model;
-            counter2++;
+            
+            
+            if (y > 1 && y < 16 )   { // matches the grass numbers in the fragshader
+                //
+                
+                mat4 model = mat4(1.0f);
+                model = glm::translate(model, vec3(x, y, z));
+                model = glm::scale(model, vec3(0.9f));
+                modelMatrices[counter2] = model;
+                counter2++;
+            }
         }
-    
-
-
-
-        // configure instanced array
-        // -------------------------
+        //
+        //
+        //
+        //
+        //        // configure instanced array
+        //        // -------------------------
         unsigned int buffer;
         glGenBuffers(1, &buffer);
         glBindBuffer(GL_ARRAY_BUFFER, buffer);
-        glBufferData(GL_ARRAY_BUFFER, (mapZ * mapX) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, (number_of_trees) * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
         // FIXME: ^ I don't know why, but if "number_of_trees" is too big (ie. greater than 500 or so), this ^^ breaks!
-
-
-        // set transformation matrices as an instance vertex attribute (with divisor 1)
-        // ----------------------------------------------------------------------------
+        
+        //
+        //        // set transformation matrices as an instance vertex attribute (with divisor 1)
+        //        // ----------------------------------------------------------------------------
         for (unsigned int i = 0; i < object_model.meshes.size(); i++)
         {
             unsigned int VAO = object_model.meshes[i].VAO;
             glBindVertexArray(VAO);
             // set attribute pointers for matrix (4 times vec4)
-            glEnableVertexAttribArray(3);
-            glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
             glEnableVertexAttribArray(4);
-            glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+            glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
             glEnableVertexAttribArray(5);
-            glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+            glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
             glEnableVertexAttribArray(6);
-            glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
-
-            glVertexAttribDivisor(3, 1);
+            glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+            glEnableVertexAttribArray(7);
+            glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+            
             glVertexAttribDivisor(4, 1);
             glVertexAttribDivisor(5, 1);
             glVertexAttribDivisor(6, 1);
-
+            glVertexAttribDivisor(7, 1);
+            
             glBindVertexArray(0);
         }
     }
@@ -969,7 +1020,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     
     
     
-    
+    //calculate indices
     int pointer = 0;
     for(int z = 0; z < mapZ - 1; z++)
     {
@@ -992,8 +1043,6 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     
     
     
-    //    GLuint VBO[2], EBO;
-    
     // VAO and VBO generateion
     glGenBuffers(2, VBO);
     glGenBuffers(1, &EBO);
@@ -1005,7 +1054,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
- 
+    
     
     // EBO
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -1015,11 +1064,11 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     
     
     //texture coordinates
-     glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(float), &textureCoords[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-   
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    
     
     
     
@@ -1036,16 +1085,16 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     GLuint modelViewProjection_terrain = glGetUniformLocation(shader.ID, "mvp");
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthMap);
-
+    
     glActiveTexture(GL_TEXTURE0 +  1);
     glBindTexture(GL_TEXTURE_2D, snowTextureID);
-
+    
     glActiveTexture(GL_TEXTURE0 + 2);
     glBindTexture(GL_TEXTURE_2D, sandTextureID);
     //
     glActiveTexture(GL_TEXTURE0 + 3);
     glBindTexture(GL_TEXTURE_2D, rockTextureID);
-
+    
     glActiveTexture(GL_TEXTURE0 + 4);
     glBindTexture(GL_TEXTURE_2D, grassTextureID);
     //
@@ -1054,40 +1103,55 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     
     
     
-    
-    
-    
-    for (int z = 0; z < zMapChunks; z++) {
-        for (int x = 0; x < xMapChunks; x++) {
+    for (int z = 0; z < 3; z++) {
+        for (int x = 0; x < 3; x++) {
             
             
             mat4 mvp = glm::mat4(1.0f);
-            mvp = translate(mvp, vec3(-mapX / 2.0 + (mapX - 1) * x, 0.0, -mapZ / 2.0 + (mapZ - 1) * z));
+            mvp = translate(mvp, vec3( (mapX - 1) * x, 0.0, (mapZ - 1) * z));
+            
             glUniformMatrix4fv(modelViewProjection_terrain, 1, GL_FALSE, &mvp[0][0]);
-
+            
             glBindVertexArray(VAO[x + z*xMapChunks]);
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);   // reset
             
+            shader.setInt("treeColor", 1);
+            mat4 tree_mvp = glm::mat4(1.0f);
+            mat4 scaleSize = scale(tree_mvp, vec3(0.7f));
+            
+            
+            
+            float y = getHeight( x+36,  z+13);
+            mat4 treeTranslate =translate(tree_mvp, vec3( (mapX - 1) * x +36, 0.0, (mapZ - 1) * z+13));
+            tree_mvp = treeTranslate * scaleSize;
+            
+            if(y>4) {
+                
+                shader.setMat4("mvp", tree_mvp);
+                object_model.Draw(shader);
+                
+                shader.setInt("treeColor", 0);
+            }
+            
+            
         }
     }
     
-
     shader.setBool("instanceOn", true);
     
-    if (object_model.textures_loaded.size() > 0)   // don't try to load a non-existant texture
-        glBindTexture(GL_TEXTURE_2D, object_model.textures_loaded[0].id);
-     shader.setInt("treeColor", 1);
+    shader.setInt("treeColor", 1);
     for (unsigned int i = 0; i < object_model.meshes.size(); i++)
     {
-         
+        
         glBindVertexArray(object_model.meshes.at(i).VAO);
         glDrawElementsInstanced(GL_TRIANGLES, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
         glBindVertexArray(0);
         
     }
-        shader.setInt("treeColor", 0);
-      
+    
+    shader.setInt("treeColor", 0);
+    
     shader.setBool("instanceOn", false);
     
 }
@@ -1108,6 +1172,80 @@ void createMap(Model &model) {
         }
     }
 }
+
+
+
+
+
+
+float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos)
+{
+    float det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
+    float l1 = ((p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.z)) / det;
+    float l2 = ((p3.z - p1.z) * (pos.x - p3.x) + (p1.x - p3.x) * (pos.y - p3.z)) / det;
+    float l3 = 1.0f - l1 - l2;
+    return l1 * p1.y + l2 * p2.y + l3 * p3.y;
+}
+
+
+float getHeight(float x, float z) {
+    
+    float terrainX = x -1;
+    float terrainZ = z-1;
+    
+    
+    
+    
+    int height = mapX*xMapChunks;
+    
+    int gridSize = (mapX*xMapChunks) / height;
+    
+    
+    int gridX = floor(terrainX/gridSize);
+    int gridZ = floor(terrainZ / gridSize);
+    
+    
+    
+    
+    if(gridX >= (height-1)|| gridZ >= (height-1)|| gridX < 0 || gridZ <0) {
+        return 0;
+    }
+    
+    int xCoordMod =  (int)terrainX % mapZ;
+    int zCoordMod = (int)terrainZ % mapZ;
+    
+    
+    float xCoord = (float)xCoordMod/(float)mapX;
+    float zCoord = (float)zCoordMod/(float)mapZ;
+    
+    
+    
+    
+    float answer;
+    if(xCoord <= (1-zCoord)){
+        answer = barryCentric(glm::vec3(0, heightPos[gridZ][gridX], 0),
+                              glm::vec3(1, heightPos[gridZ+1][gridX], 0), glm::vec3(0, heightPos[gridZ][gridX + 1], 1), glm::vec2(xCoord, zCoord));
+        
+    }else {
+        
+        answer = barryCentric(glm::vec3(1, heightPos[gridZ+1][gridX], 0),
+                              glm::vec3(1, heightPos[gridZ+1][gridX+1], 1), glm::vec3(0, heightPos[gridZ][gridX + 1], 1), glm::vec2(xCoord, zCoord));
+        
+        
+        
+    }
+    
+    
+    
+    
+    
+    return answer;
+    
+    
+    
+    
+}
+
 
 
 

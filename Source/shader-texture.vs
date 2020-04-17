@@ -7,8 +7,9 @@
 
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
-layout (location = 2) in vec2 aUV;
-layout (location = 3) in mat4 aInstanceMatrix;
+layout (location = 2) in vec3 aColor;
+layout (location = 3) in vec2 aUV;
+layout (location = 4) in mat4 aInstanceMatrix;
 
 
 //uniform matrices
@@ -31,6 +32,7 @@ out vec3 FragPos;
 out vec4 FragPosLightSpace;
 
 
+
 //flat variables
 flat out vec3 flatFragPos;
 flat out vec4 flatFragPosLightSpace;
@@ -44,7 +46,9 @@ uniform bool instanceOn;
 void main()
 {
     //take the uniform newY to change the Y cordinate of the vertices
-    vec3 calPos = aPos;
+     vec3 calPos = aPos;
+    
+    vertexColor = aColor;
     
     //update the change in Y coordinate
     float changeY = calPos.y * newY;
@@ -53,6 +57,9 @@ void main()
     //calculate normals here
     
     objNormal = aNormal;
+    
+    Normal = mat3(transpose(inverse(mvp))) * aNormal;
+    
     
     vertexUV = aUV;
     FragPos = vec3(mvp * vec4(calPos,1.0f));
