@@ -110,6 +110,7 @@ float heightPos [mapX*xMapChunks][mapZ*zMapChunks];
 //camera info
 //vec3 cameraPosition(0.0f,43.0f,30.0f);
 vec3 cameraPosition(0.0f,43.0f,0.0f);
+float  fovAngle = 50.0f;
 
 //vec3 cameraLookAt(0.0f, 0.0f, 0.0f);
 vec3 cameraLookAt (0.810638f,-0.188706f, 0.554307f);
@@ -130,6 +131,8 @@ void createMap(Model &model);
 void renderTerrain(vector <GLuint> &VAO , Shader &shader,  int &nIndices,vec3 &cameraPosition, Model &model, Model &cloud);
 void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model &model);
 float getHeight(float x, float z);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void processMouseScroll(float yoffset);
 
 
 // model
@@ -156,8 +159,6 @@ int main(int argc, char*argv[])
     
     //random number initialization
     srand( static_cast<unsigned int>(time(nullptr)));
-    
-    float  fovAngle = 45.0f;
     
     
     
@@ -307,8 +308,8 @@ int main(int argc, char*argv[])
     
     
     // create the tree model
-//    string tree_path = FileSystem::getPath("Xcode/obj/Tree_obj/tree.obj");
-            string tree_path = FileSystem::getPath("Xcode/obj/lowpolytree/Lowpoly_tree_sample.obj");
+    //    string tree_path = FileSystem::getPath("Xcode/obj/Tree_obj/tree.obj");
+    string tree_path = FileSystem::getPath("Xcode/obj/lowpolytree/Lowpoly_tree_sample.obj");
     Model poly_tree(tree_path);
     
     
@@ -630,16 +631,6 @@ int main(int argc, char*argv[])
             
         }
         
-        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) // camera zoom in
-        {
-            fovAngle = fovAngle  - 0.1f;
-        }
-        
-        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) // camera zoom out
-        {
-            fovAngle = fovAngle + 0.1f;
-        }
-        
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) // move camera down
         {
             cameraPosition.y -= currentCameraSpeed * dt*40;
@@ -745,6 +736,7 @@ int main(int argc, char*argv[])
         
         textureShader.use();
         
+        glfwSetScrollCallback(window, scroll_callback);
         projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,600.0f);
         
         glUniformMatrix4fv(viewMatrix_texture, 1, GL_FALSE, &viewMatrix[0][0]);
@@ -974,18 +966,18 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
             glBindVertexArray(VAO[x + z*xMapChunks]);
             glDrawElements(primativeRender, nIndices, GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);   // reset
-
+            
         }
     }
     
     
-
+    
     
     shader.setBool("instanceOn", true);
     shader.setInt("treeColor", 1);
     
     
-
+    
     
     
     
@@ -997,7 +989,7 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
             glBindTexture(GL_TEXTURE_2D,8);
         else
             glBindTexture(GL_TEXTURE_2D,9);
-     
+        
         glBindVertexArray(object_model.meshes.at(i).VAO);
         glBindBufferRange(GL_UNIFORM_BUFFER,0, object_model.getUniformIndex().at(i),0,object_model.getMaterialSize().at(i));
         glDrawElementsInstanced(GL_TRIANGLES, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
@@ -1082,7 +1074,20 @@ float getHeight(float x, float z)
     return answer;
 }
 
+// whenever the mouse scroll wheel scrolls, this callback is called
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    processMouseScroll(yoffset);
+}
 
-
-
+// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
+void processMouseScroll(float yoffset)
+{
+    if (fovAngle >= 10.0f && fovAngle <= 50.0f)
+        fovAngle -= yoffset;
+    if (fovAngle <= 10.0f)
+        fovAngle = 10.0f;
+    if (fovAngle >= 50.0f)
+        fovAngle = 50.0f;
+}
 
