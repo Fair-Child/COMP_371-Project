@@ -79,7 +79,7 @@ int TerrainMode = 0;
 
 //light position
 //vec3 lightpos (-20.f, 45.0f,-30.0f);
-vec3 lightpos (-85.0f, 12.0f,68.0f);
+vec3 lightpos (-25.0f, 12.0f,68.0f);
 
 
 
