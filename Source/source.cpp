@@ -78,7 +78,8 @@ int TerrainMode = 0;
 
 
 //light position
-vec3 lightpos (149.0f, 38.0f,151.0f);
+//vec3 lightpos (-20.f, 45.0f,-30.0f);
+vec3 lightpos (-85.0f, 12.0f,68.0f);
 
 
 
@@ -481,9 +482,9 @@ int main(int argc, char*argv[])
             
             ImGui::SliderFloat("Terrian Height Control", &xTrans, -0.99f, .199f);
             ImGui::Text("Sunlight Positon ");
-            ImGui::SliderFloat("X", &lightpos.x, 0.0f, 200.f);
-            ImGui::SliderFloat("Y", &lightpos.y,0.0f, 200.f);
-            ImGui::SliderFloat("Z", &lightpos.z, 0.0f, 200.0f);
+            ImGui::SliderFloat("X", &lightpos.x, -300.0f, 300.f);
+            ImGui::SliderFloat("Y", &lightpos.y,-300.0f, 300.f);
+            ImGui::SliderFloat("Z", &lightpos.z, -300.0f, 300.0f);
             
             
             if (ImGui::Button("Jagged Mode"))   {
@@ -617,7 +618,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) //camera and light pos move left
         {
             cameraPosition.z -= currentCameraSpeed * dt*40;
-            lightpos.z -= currentCameraSpeed * dt*40;
+//            lightpos.z -= currentCameraSpeed * dt*40;
             
             
         }
@@ -625,7 +626,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) //camera and light pos move right
         {
             cameraPosition.z += currentCameraSpeed * dt*40;
-            lightpos.z += currentCameraSpeed * dt*40;
+//            lightpos.z += currentCameraSpeed * dt*40;
             
             
         }
@@ -635,7 +636,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS )//camera and light pos move backwards
         {
             cameraPosition.x -= currentCameraSpeed * dt*40;
-            lightpos.x -= currentCameraSpeed * dt*40;
+//            lightpos.x -= currentCameraSpeed * dt*40;
             
             
         }
@@ -643,21 +644,21 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) //camera and light pos move forward
         {
             cameraPosition.x += currentCameraSpeed * dt*40;
-            lightpos.x += currentCameraSpeed * dt*40;
+//            lightpos.x += currentCameraSpeed * dt*40;
             
         }
         
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) //move light and camera down
         {
             cameraPosition.y -= currentCameraSpeed * dt*40;
-            lightpos.y -= currentCameraSpeed * dt*40;
+//            lightpos.y -= currentCameraSpeed * dt*40;
             
         }
         
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) //move light and camera up
         {
             cameraPosition.y += currentCameraSpeed * dt*40;
-            lightpos.y += currentCameraSpeed * dt*40;
+//            lightpos.y += currentCameraSpeed * dt*40;
             
         }
         

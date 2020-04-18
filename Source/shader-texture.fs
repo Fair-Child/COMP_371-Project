@@ -70,10 +70,10 @@ float shadowCalculation(vec4 fragPosLightSpace)
     float closestDepth = texture(shadowMap, projCoords.xy).r;
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
-    
+
     //bias for shadow acne using PCF
-    float bias = 0.003;
-    
+    float bias = 0.005;
+
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
     for(int x = -1; x <= 1; ++x)
@@ -85,8 +85,10 @@ float shadowCalculation(vec4 fragPosLightSpace)
         }
     }
     shadow /= 24.0;
-    
+
     return shadow;
+    
+   
 }
 
 
