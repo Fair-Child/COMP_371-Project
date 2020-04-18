@@ -185,7 +185,7 @@ int main(int argc, char*argv[])
     int screenWidth, screenHeight;
     
     // Create Window and rendering context using GLFW, resolution is 1024x768
-    GLFWwindow* window = glfwCreateWindow(1024, 768, "A1_29644490", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1024, 768, "TEAM_15_PROJECT", NULL, NULL);
     if (window == NULL)
     {
         std::cerr << "Failed to create GLFW window" << std::endl;
