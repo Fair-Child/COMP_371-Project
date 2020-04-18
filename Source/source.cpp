@@ -69,6 +69,7 @@ bool flatOn = false;
 bool updateMap =false;
 bool show_demo_window = true;
 bool cameraFirstPerson = true;
+bool changeHeight = false;
 
 int TerrainMode = 0;
 
@@ -108,7 +109,6 @@ int nIndices = mapX * mapZ * 6;
 float heightPos [mapX*xMapChunks][mapZ*zMapChunks];
 
 //camera info
-//vec3 cameraPosition(0.0f,43.0f,30.0f);
 vec3 cameraPosition(0.0f,43.0f,0.0f);
 float  fovAngle = 45.0f;
 
@@ -128,7 +128,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void renderLight(const GLuint &lamp_Shader);
 float Remap (float value, float from1, float to1, float from2, float to2);
 void createMap(Model &model);
-void renderTerrain(vector <GLuint> &VAO , Shader &shader,  int &nIndices,vec3 &cameraPosition, Model &model, Model &cloud);
+void renderTerrain(vector <GLuint> &VAO , Shader &shader,  int &nIndices,vec3 &cameraPosition, Model &model);
 void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model &model);
 float getHeight(float x, float z);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -257,7 +257,7 @@ int main(int argc, char*argv[])
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    //  glEnable(GL_FRAMEBUFFER_SRGB);
+    //      glEnable(GL_FRAMEBUFFER_SRGB);
     
     // For frame time
     float lastFrameTime = glfwGetTime();
@@ -307,14 +307,12 @@ int main(int argc, char*argv[])
     
     
     // create the tree model
-    //    string tree_path = FileSystem::getPath("Xcode/obj/Tree_obj/tree.obj");
     string tree_path = FileSystem::getPath("Xcode/obj/lowpolytree/Lowpoly_tree_sample.obj");
     Model poly_tree(tree_path);
     
     
     //create cloud model
-    string cloud_path = FileSystem::getPath("Xcode/obj/cloud.obj");
-    Model cloud(cloud_path);
+    
     
     
     //create map
@@ -397,17 +395,18 @@ int main(int argc, char*argv[])
         
         lightProjection = glm::perspective(glm::radians(130.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
         
-        //     lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        
         
         
         lightView = glm::lookAt(lightpos, glm::vec3(0.0f), glm::vec3(0.0, 0.0, 1.0));
         lightSpaceMatrix = lightProjection * lightView;
         // render scene from light's point of view
         simpleShadow.use();
+        
         GLuint lightSpaceMatrixSimple = glGetUniformLocation(simpleShadow.ID, "lightSpaceMatrix");
         glUniformMatrix4fv(lightSpaceMatrixSimple, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
         
-        renderTerrain(VAO, simpleShadow, nIndices, cameraPosition, poly_tree, cloud);
+        renderTerrain(VAO, simpleShadow, nIndices, cameraPosition, poly_tree);
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // reset viewport
@@ -444,7 +443,7 @@ int main(int argc, char*argv[])
         
         
         glUniform1f(glGetUniformLocation(textureShader.ID, "newY"), xTrans);
-        renderTerrain(VAO,textureShader, nIndices, cameraPosition, poly_tree, cloud);
+        renderTerrain(VAO,textureShader, nIndices, cameraPosition, poly_tree);
         
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyBoxShader.use();
@@ -513,7 +512,7 @@ int main(int argc, char*argv[])
         
         float heights =  getHeight(cameraPosition.x,cameraPosition.z);
         
-        
+        //collision detection
         
         if(cameraPosition.y  + xTrans< (heights +5.99 )) {
             cameraPosition.y = (heights  +5.99) +xTrans;
@@ -602,7 +601,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // camera zoom in
         {
             cameraPosition.z -= currentCameraSpeed * dt*40;
-                        lightpos.z -= currentCameraSpeed * dt*40;
+            lightpos.z -= currentCameraSpeed * dt*40;
             
             
         }
@@ -610,7 +609,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // camera zoom out
         {
             cameraPosition.z += currentCameraSpeed * dt*40;
-                        lightpos.z += currentCameraSpeed * dt*40;
+            lightpos.z += currentCameraSpeed * dt*40;
             
             
         }
@@ -620,7 +619,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ) // move camera to the left
         {
             cameraPosition.x -= currentCameraSpeed * dt*40;
-                        lightpos.x -= currentCameraSpeed * dt*40;
+            lightpos.x -= currentCameraSpeed * dt*40;
             
             
         }
@@ -628,7 +627,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // move camera to the right
         {
             cameraPosition.x += currentCameraSpeed * dt*40;
-                        lightpos.x += currentCameraSpeed * dt*40;
+            lightpos.x += currentCameraSpeed * dt*40;
             
         }
         
@@ -933,7 +932,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     
 }
 
-void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &cameraPosition, Model &object_model, Model &cloud) {
+void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &cameraPosition, Model &object_model) {
     
     shader.use();
     GLuint modelViewProjection_terrain = glGetUniformLocation(shader.ID, "mvp");
@@ -973,44 +972,33 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     
     
     
-    
-    shader.setBool("instanceOn", true);
-    shader.setInt("treeColor", 1);
-    
-    
-    
-    
-    
-    
-    
-    for (unsigned int i = 0; i < object_model.meshes.size(); i++)
-    {
+    if( xTrans>= -0.843) {
+        shader.setBool("instanceOn", true);
+        shader.setInt("treeColor", 1);
         
+        for (unsigned int i = 0; i < object_model.meshes.size(); i++)
+        {
+            
+            
+            
+            
+            glActiveTexture(GL_TEXTURE0);
+            if (i % 2 == 0)
+                glBindTexture(GL_TEXTURE_2D,8);
+            else
+                glBindTexture(GL_TEXTURE_2D,9);
+            
+            glBindVertexArray(object_model.meshes.at(i).VAO);
+            glBindBufferRange(GL_UNIFORM_BUFFER,0, object_model.getUniformIndex().at(i),0,object_model.getMaterialSize().at(i));
+            glDrawElementsInstanced(GL_TRIANGLES, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
+            glBindVertexArray(0);
+            
+            
+        }
         
+        shader.setInt("treeColor", 0);
+        shader.setBool("instanceOn", false);
         
-        
-        glActiveTexture(GL_TEXTURE0);
-        if (i % 2 == 0)
-            glBindTexture(GL_TEXTURE_2D,8);
-        else
-            glBindTexture(GL_TEXTURE_2D,9);
-        
-        glBindVertexArray(object_model.meshes.at(i).VAO);
-        glBindBufferRange(GL_UNIFORM_BUFFER,0, object_model.getUniformIndex().at(i),0,object_model.getMaterialSize().at(i));
-        glDrawElementsInstanced(GL_TRIANGLES, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
-        glBindVertexArray(0);
-    }
-    
-    shader.setInt("treeColor", 0);
-    shader.setBool("instanceOn", false);
-    
-    if(!cameraFirstPerson)
-    {
-        mat4 cloudmvp = translate(mat4(1.0f), vec3(cameraPosition.x+15,cameraPosition.y-4,cameraPosition.z+15))  *
-        scale(mat4(1.0f), vec3(0.02f, 0.02f, 0.02f));
-        
-        shader.setMat4("mvp", cloudmvp);
-        cloud.Draw(shader);
     }
 }
 

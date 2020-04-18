@@ -49,6 +49,7 @@ uniform  bool textureOn;
 uniform bool flatOn;
 uniform bool treeColor;
 
+
 //lighting uniforms
 uniform vec3 lightColor;
 uniform vec3 lightPos;
@@ -256,7 +257,7 @@ void main()
         
         if(textureOn) {
                   vec4 textResult= vec4(resultObj * texture(texture_diffuse1, vertexUV).rgb ,1.0f);
-                  FragColor = vec4( textResult);
+            FragColor = vec4(textResult);
               } else if(!textureOn) {
                   FragColor = vec4(Diffuse.rgb * resultObj,1.0f);
               }
@@ -265,5 +266,7 @@ void main()
         
         
     }
+    
+  
     
 }

@@ -107,7 +107,7 @@ void main()
         gl_Position = matrixTotal * vec4(calPos, 1.0f);
     }
     
-    //gl_Position = projection * view * mvp * vec4(calPos, 1.0f);
+
     
     
     
