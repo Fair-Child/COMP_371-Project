@@ -615,50 +615,66 @@ int main(int argc, char*argv[])
         
         //these are the following keybindings to control the world
         
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) //camera and light pos move left
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) //camera  move left
         {
             cameraPosition.z -= currentCameraSpeed * dt*40;
-//            lightpos.z -= currentCameraSpeed * dt*40;
+            
             
             
         }
         
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) //camera and light pos move right
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) //camera move right
         {
             cameraPosition.z += currentCameraSpeed * dt*40;
-//            lightpos.z += currentCameraSpeed * dt*40;
+            
             
             
         }
         
         
         
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS )//camera and light pos move backwards
+        
+        
+        
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS )//camera  move backwards
         {
             cameraPosition.x -= currentCameraSpeed * dt*40;
-//            lightpos.x -= currentCameraSpeed * dt*40;
+            
             
             
         }
         
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) //camera and light pos move forward
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) //camera a move forward
         {
             cameraPosition.x += currentCameraSpeed * dt*40;
-//            lightpos.x += currentCameraSpeed * dt*40;
+            
+            
+        }
+        
+        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) //light pos move down
+        {
+            
+            cameraPosition.y -= currentCameraSpeed * dt*40;
+            
+        }
+        
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) // light pos move up
+        {
+            
+            cameraPosition.y += currentCameraSpeed * dt*40;
             
         }
         
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) //move light and camera down
         {
-            cameraPosition.y -= currentCameraSpeed * dt*40;
-//            lightpos.y -= currentCameraSpeed * dt*40;
+            
+            lightpos.y -= currentCameraSpeed * dt*40;
             
         }
         
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) //move light and camera up
         {
-            cameraPosition.y += currentCameraSpeed * dt*40;
-//            lightpos.y += currentCameraSpeed * dt*40;
+            lightpos.y += currentCameraSpeed * dt*40;
             
         }
         
@@ -992,7 +1008,7 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
         
         for (unsigned int i = 0; i < object_model.meshes.size(); i++)
         {
-  
+            
             if (i % 2 == 0){
                 
                 glActiveTexture(GL_TEXTURE0);
@@ -1011,7 +1027,7 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
             glBindBufferRange(GL_UNIFORM_BUFFER,0, object_model.getUniformIndex().at(i),0,object_model.getMaterialSize().at(i));
             glDrawElementsInstanced(primativeRender, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
             glBindVertexArray(0);
-                  
+            
         }
         
         shader.setInt("treeColor", 0);
