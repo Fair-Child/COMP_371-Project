@@ -256,7 +256,7 @@ int main(int argc, char*argv[])
     // Enable Backface culling
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);    
+    glDepthFunc(GL_LESS);
     //  glEnable(GL_FRAMEBUFFER_SRGB);
     
     // For frame time
@@ -298,7 +298,7 @@ int main(int argc, char*argv[])
     
     // textures
     textureShader.use();
-    glUniform1i(glGetUniformLocation(textureShader.ID, "shadowMap"), 0);
+    glUniform1i(glGetUniformLocation(textureShader.ID, "shadowMap"), 12);
     glUniform1i(glGetUniformLocation(textureShader.ID, "snowTexture"), 1);
     glUniform1i(glGetUniformLocation(textureShader.ID, "sandyTexture"), 2);
     glUniform1i(glGetUniformLocation(textureShader.ID, "rockyTexture"), 3);
@@ -937,7 +937,7 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     
     shader.use();
     GLuint modelViewProjection_terrain = glGetUniformLocation(shader.ID, "mvp");
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0 + 12);
     glBindTexture(GL_TEXTURE_2D, depthMap);
     
     glActiveTexture(GL_TEXTURE0 +  1);
