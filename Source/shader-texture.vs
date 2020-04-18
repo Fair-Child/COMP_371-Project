@@ -42,7 +42,7 @@ uniform Mat{
 };
 
 //mat out
- 
+
 out vec4 Ambient;
 out vec4 Diffuse;
 out vec4 Specular;
@@ -68,7 +68,7 @@ void main()
     Specular = aSpecular;
     
     //take the uniform newY to change the Y cordinate of the vertices
-     vec3 calPos = aPos;
+    vec3 calPos = aPos;
     
     vertexColor = aColor;
     
@@ -76,7 +76,7 @@ void main()
     float changeY = calPos.y * newY;
     calPos.y = calPos.y + changeY;
     
-
+    
     
     
     mat4 matrixTotal;
@@ -110,7 +110,7 @@ void main()
         gl_Position = matrixTotal * vec4(calPos, 1.0f);
     }
     
-
+    
     
     
     

@@ -230,11 +230,10 @@ void main()
             vec3 specular = specularStrength * spec * lightColor;
             
             resultObj = (ambient  + diffuse + specular) * (1 - shadow);
+            
         } else if(!flatOn) {
             
-                vec3 Normal =objNormal;
-            
-            
+            vec3 Normal =objNormal;
             float shadow = shadowCalculation(FragPosLightSpace);
             //ambient
             float ambientStrength = 1.2;

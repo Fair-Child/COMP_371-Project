@@ -651,7 +651,7 @@ int main(int argc, char*argv[])
             
         }
         
-        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) //light pos move down
+        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) //light pos move up
         {
             
             cameraPosition.y -= currentCameraSpeed * dt*40;
@@ -808,13 +808,13 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     vector <int> indices(6 * (mapZ - 1) * (mapZ - 1));
     vector<float> textureCoords;
     
-    float xSample =0;
+    float xSample = 0;
     float zSample = 0;
     float amp  = 1;
     float freq = 1;
     
     //create vertices and noise
-    float  rangedNoise =0;
+    float  rangedNoise = 0;
     
     for (int z = 0; z < mapZ ; z++)
         for (int x = 0; x < mapX; x++)
@@ -868,7 +868,8 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     modelMatrices = new glm::mat4[number_of_trees];
     
     int counter = 0;
-    while (counter < number_of_trees) {
+    while (counter < number_of_trees)
+    {
         int c = (rand() % (mapZ * mapX)) * 3; // random number that is less than vertices_copy.size()[4,915,200] and divisible by 3
         float x = vertices[c];
         float y = vertices[c+1];
@@ -1008,31 +1009,25 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
         
         for (unsigned int i = 0; i < object_model.meshes.size(); i++)
         {
-            
-            if (i % 2 == 0){
-                
+            if (i % 2 == 0)
+            {
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D,8);
-                
             }
             
-            else{
-                
+            else
+            {
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D,9);
-                
             }
-            
             glBindVertexArray(object_model.meshes.at(i).VAO);
             glBindBufferRange(GL_UNIFORM_BUFFER,0, object_model.getUniformIndex().at(i),0,object_model.getMaterialSize().at(i));
             glDrawElementsInstanced(primativeRender, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
             glBindVertexArray(0);
-            
         }
         
         shader.setInt("treeColor", 0);
         shader.setBool("instanceOn", false);
-        
     }
 }
 
