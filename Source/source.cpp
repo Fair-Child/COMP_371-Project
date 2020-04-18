@@ -110,7 +110,7 @@ float heightPos [mapX*xMapChunks][mapZ*zMapChunks];
 //camera info
 //vec3 cameraPosition(0.0f,43.0f,30.0f);
 vec3 cameraPosition(0.0f,43.0f,0.0f);
-float  fovAngle = 50.0f;
+float  fovAngle = 45.0f;
 
 //vec3 cameraLookAt(0.0f, 0.0f, 0.0f);
 vec3 cameraLookAt (0.810638f,-0.188706f, 0.554307f);
@@ -392,7 +392,7 @@ int main(int argc, char*argv[])
         
         // this part is largely inspired by learnopengl's shadow tutorial and lab 8
         // render shadows from lights perspective
-        float near_plane = 1.0f, far_plane = 600.0f;
+        float near_plane = 1.0f, far_plane = 300.0f;
         
         
         lightProjection = glm::perspective(glm::radians(130.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
@@ -602,7 +602,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // camera zoom in
         {
             cameraPosition.z -= currentCameraSpeed * dt*40;
-            //            lightpos.z -= currentCameraSpeed * dt*40;
+                        lightpos.z -= currentCameraSpeed * dt*40;
             
             
         }
@@ -610,7 +610,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // camera zoom out
         {
             cameraPosition.z += currentCameraSpeed * dt*40;
-            //            lightpos.z += currentCameraSpeed * dt*40;
+                        lightpos.z += currentCameraSpeed * dt*40;
             
             
         }
@@ -620,7 +620,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ) // move camera to the left
         {
             cameraPosition.x -= currentCameraSpeed * dt*40;
-            //            lightpos.x -= currentCameraSpeed * dt*40;
+                        lightpos.x -= currentCameraSpeed * dt*40;
             
             
         }
@@ -628,7 +628,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // move camera to the right
         {
             cameraPosition.x += currentCameraSpeed * dt*40;
-            //            lightpos.x += currentCameraSpeed * dt*40;
+                        lightpos.x += currentCameraSpeed * dt*40;
             
         }
         
@@ -738,7 +738,7 @@ int main(int argc, char*argv[])
         textureShader.use();
         
         glfwSetScrollCallback(window, scroll_callback);
-        projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,600.0f);
+        projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,300.0f);
         
         glUniformMatrix4fv(viewMatrix_texture, 1, GL_FALSE, &viewMatrix[0][0]);
         glUniformMatrix4fv(projectionMatrix_texture, 1, GL_FALSE, &projectionMatrix[0][0]);
@@ -1088,11 +1088,11 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
 void processMouseScroll(float yoffset)
 {
-    if (fovAngle >= 10.0f && fovAngle <= 50.0f)
+    if (fovAngle >= 10.0f && fovAngle <= 45.0f)
         fovAngle -= yoffset;
     if (fovAngle <= 10.0f)
         fovAngle = 10.0f;
-    if (fovAngle >= 50.0f)
-        fovAngle = 50.0f;
+    if (fovAngle >= 45.0f)
+        fovAngle = 45.0f;
 }
 

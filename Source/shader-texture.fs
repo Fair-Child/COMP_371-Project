@@ -96,8 +96,8 @@ void main()
           vec3 resultObj;
     
     if(flatOn) {
-//        vec3 Normal = normalize( cross( dFdx( flatFragPos.xyz ), dFdy( flatFragPos.xyz ) ) );
-        vec3 Normal = objNormal;
+        vec3 Normal = normalize( cross( dFdx( flatFragPos.xyz ), dFdy( flatFragPos.xyz ) ) );
+//        vec3 Normal = objNormal;
         float shadow = shadowCalculation(flatFragPosLightSpace);
         
         float ambientStrength = 0.9;
@@ -119,8 +119,8 @@ void main()
         result = (ambient  + diffuse + specular) * (1 - shadow);
     } else if(!flatOn) {
         
-//        vec3 Normal = normalize( cross( dFdx( FragPos.xyz ), dFdy( FragPos.xyz ) ) );
-            vec3 Normal = objNormal;
+        vec3 Normal = normalize( cross( dFdx( FragPos.xyz ), dFdy( FragPos.xyz ) ) );
+//            vec3 Normal = objNormal;
         
         float shadow = shadowCalculation(FragPosLightSpace);
         
@@ -208,10 +208,11 @@ void main()
         
         
         if(flatOn) {
-            vec3 Normal = normalize( cross( dFdx( flatFragPos.xyz ), dFdy( flatFragPos.xyz ) ) );
+//            vec3 Normal = normalize( cross( dFdx( flatFragPos.xyz ), dFdy( flatFragPos.xyz ) ) );
+            vec3 Normal =objNormal;
             float shadow = shadowCalculation(flatFragPosLightSpace);
             
-            float ambientStrength = 1.9;
+            float ambientStrength = 1.2;
             vec3 ambient = ambientStrength * lightColor;
             
             //diffuse
@@ -229,12 +230,13 @@ void main()
             resultObj = (ambient  + diffuse + specular) * (1 - shadow);
         } else if(!flatOn) {
             
-            vec3 Normal = normalize( cross( dFdx( FragPos.xyz ), dFdy( FragPos.xyz ) ) );
+//            vec3 Normal = normalize( cross( dFdx( FragPos.xyz ), dFdy( FragPos.xyz ) ) );
+                vec3 Normal =objNormal;
             
             
             float shadow = shadowCalculation(FragPosLightSpace);
             
-            float ambientStrength = 1.9;
+            float ambientStrength = 1.2;
             vec3 ambient = ambientStrength * lightColor;
             
             //diffuse
