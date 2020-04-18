@@ -130,7 +130,7 @@ void renderLight(const GLuint &lamp_Shader);
 float Remap (float value, float from1, float to1, float from2, float to2);
 void createMap(Model &model);
 void renderTerrain(vector <GLuint> &VAO , Shader &shader,  int &nIndices,vec3 &cameraPosition, Model &model);
-void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model &model);
+void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model &model);
 float getHeight(float x, float z);
 float getHeightTrees(float x, float z);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -259,7 +259,7 @@ int main(int argc, char*argv[])
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    //      glEnable(GL_FRAMEBUFFER_SRGB);
+    //          glEnable(GL_FRAMEBUFFER_SRGB);
     
     // For frame time
     float lastFrameTime = glfwGetTime();
@@ -452,7 +452,10 @@ int main(int argc, char*argv[])
         skyBoxShader.use();
         GLuint skyBoxViewMatrix = glGetUniformLocation(skyBoxShader.ID, "view");
         GLuint skyBoxProjectionMatrix = glGetUniformLocation(skyBoxShader.ID, "projection");
+        mat4 rotateSkyBox = glm::rotate(mat4(1.0f), 180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
         mat4 view = mat4(mat3(viewMatrix));
+        
+        view = view *rotateSkyBox;
         glUniformMatrix4fv(skyBoxViewMatrix, 1, GL_FALSE, &view[0][0]);
         glUniformMatrix4fv(skyBoxProjectionMatrix, 1, GL_FALSE, &projectionMatrix[0][0]);
         
@@ -523,7 +526,7 @@ int main(int argc, char*argv[])
             
         }
         
-         //collision detection for camera and tree objs
+        //collision detection for camera and tree objs
         if(cameraPosition.y  + xTrans< (treeHeights +5.99 )) {
             cameraPosition.y = (treeHeights  +5.99) +xTrans;
             
@@ -574,7 +577,7 @@ int main(int argc, char*argv[])
             if (cameraFirstPerson)
             {
                 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
-               
+                
                 near_plane = 1.0f;
                 far_plane = 300.0f;
                 
@@ -596,13 +599,13 @@ int main(int argc, char*argv[])
             if (cameraFirstPerson)
             {
                 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
-               
+                
             }
             else
             {
                 // Position of the camera is on the sphere looking at the point of interest (cameraPosition)
                 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
-             
+                
                 near_plane = 1.0f;
                 far_plane = 125.0f;
             }
