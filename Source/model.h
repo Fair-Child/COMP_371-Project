@@ -1,3 +1,8 @@
+// COMP-371 Group Project Team 15
+// Procedural World Generation
+// Matthew Salaciak 29644490
+// Jeremy Gaudet 40045224
+//  Elsa Donovan 26857655
 
 
 #ifndef MODEL_H
@@ -223,6 +228,7 @@ private:
                     skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
                     break;
                 }
+               
             }
             if(!skip)
             {   // if texture hasn't been loaded already, load it
@@ -233,7 +239,9 @@ private:
                 textures.push_back(texture);
                 textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
             }
+           
         }
+      
         return textures;
     }
 };
@@ -244,7 +252,7 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
     string filename = string(path);
     filename = directory + '/' + filename;
     
-
+ 
     
     unsigned int textureID;
     glGenTextures(1, &textureID);

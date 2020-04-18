@@ -1,7 +1,9 @@
-//
-// COMP 371 GROUP PROJECT
-//
-// Created by Matthew Salaciak 29644490.
+// COMP-371 Group Project Team 15
+// Procedural World Generation
+// Matthew Salaciak 29644490
+// Jeremy Gaudet 40045224
+//  Elsa Donovan 26857655
+
 //
 // Inspired by the COMP 371 Lectures and Lab 2,3 and 4 and the following tutorials
 // - https://learnopengl.com/Getting-started/Hello-Triangle
@@ -62,7 +64,7 @@ using namespace std;
 //global variables and functions for the project
 
 
-//bools
+//bools to control key / gui toggles
 bool textureOn = true;
 bool GUICONTROL = true;
 bool flatOn = false;
@@ -71,13 +73,19 @@ bool show_demo_window = true;
 bool cameraFirstPerson = true;
 bool changeHeight = false;
 
+// used to determine which terrainmode it is using for world generation
 int TerrainMode = 0;
 
 
-
+//light position
 vec3 lightpos (149.0f, 38.0f,151.0f);
 
 
+
+
+
+
+//counter
 int counter =0;
 
 //worldspace matrix
@@ -85,8 +93,6 @@ mat4 projectionMatrix = mat4(1.0f);
 mat4 viewMatrix;
 mat4 modelMatrix = mat4(1.0f);
 mat4 modelViewProjection;
-
-
 mat4 WorldTransformMatrix(1.f);
 
 //textures
@@ -97,10 +103,10 @@ GLuint sandTextureID;
 GLuint grassTextureID;
 GLuint waterTextureID;
 
-
+//array of VAO's
 vector<GLuint> VAO(100);
 
-//params to start
+//Procedural World Paramters (only adjust mapX and mapZ which control the size)
 const int xMapChunks = 1;
 const int zMapChunks = 1;;
 const int mapX = 512;
@@ -111,13 +117,9 @@ float heightPosTrees [mapX*xMapChunks][mapZ*zMapChunks];
 
 //camera info
 vec3 cameraPosition(0.0f,43.0f,0.0f);
-float  fovAngle = 45.0f;
-
-//vec3 cameraLookAt(0.0f, 0.0f, 0.0f);
 vec3 cameraLookAt (0.810638f,-0.188706f, 0.554307f);
-
 vec3 cameraUp(0.0f, 1.0f, 0.0f);
-
+float  fovAngle = 45.0f;
 
 //primatative rendering options
 int primativeRender = GL_TRIANGLES;
@@ -135,24 +137,23 @@ float getHeight(float x, float z);
 float getHeightTrees(float x, float z);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processMouseScroll(float yoffset);
+float barryCentric(vec3 p1, vec3 p2, vec3 p3, vec2 pos);
 
 
-// model
+// # of tree objects
 const int number_of_trees = 1000;
 
 
-//noise options
+//noise paramteres
 int octaves = 5;
-float meshHeight = 25;  // Vertical scaling
-float noiseScale = 64;  // Horizontal scaling
+float meshHeight = 25;
+float noiseScale = 64;
 float persistence = 0.5;
 float lacunarity = 2;
 float xTrans = 0;
 
+//vbo and ebo
 GLuint VBO[2], EBO;
-
-float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos);
-
 
 
 
@@ -192,7 +193,7 @@ int main(int argc, char*argv[])
         return -1;
     }
     
-    //    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
     
@@ -209,7 +210,7 @@ int main(int argc, char*argv[])
     
     
     
-    //texture shader for grid, olaf
+    // load shaders
     Shader textureShader(FileSystem::getPath("Source/shader-texture.vs").c_str(),FileSystem::getPath("Source/shader-texture.fs").c_str());
     Shader skyBoxShader(FileSystem::getPath("Source/skyBoxShader.vs").c_str(), FileSystem::getPath("Source/skyBoxShader.fs").c_str());
     //shader for simple shadows
@@ -228,7 +229,7 @@ int main(int argc, char*argv[])
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     
-    
+    //skybox cube mape faces
     vector<std::string> faces
     {
         FileSystem::getPath("Xcode/skyBoxTextures/Daylight Box_Right.bmp"),
@@ -313,7 +314,7 @@ int main(int argc, char*argv[])
     Model poly_tree(tree_path);
     
     
-    //create cloud model
+    
     
     
     
@@ -335,10 +336,13 @@ int main(int argc, char*argv[])
     // ------------------
     while(!glfwWindowShouldClose(window))
     {
+        
+        //imGUI set up
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         
+        //checks to see if the updateMap was called, if so it then updates map.
         if(updateMap)
         {
             createMap(poly_tree);
@@ -396,12 +400,10 @@ int main(int argc, char*argv[])
         
         
         
-        lightProjection = glm::perspective(glm::radians(130.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
+        lightProjection = perspective(radians(130.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
         
         
-        
-        
-        lightView = glm::lookAt(lightpos, glm::vec3(0.0f), glm::vec3(0.0, 0.0, 1.0));
+        lightView = glm::lookAt(lightpos, vec3(0.0f), glm::vec3(0.0, 0.0, 1.0));
         lightSpaceMatrix = lightProjection * lightView;
         // render scene from light's point of view
         simpleShadow.use();
@@ -466,14 +468,14 @@ int main(int argc, char*argv[])
         glDepthMask(GL_TRUE);
         
         
-        
+        //imGUI implementation adapted from their openGL example
         if (show_demo_window)
             
         {
             
-            ImGui::Begin("World Control");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("World Control");
             
-            ImGui::Text("World Control Start Up.");                         // Display some text (you can use a format strings too)
+            ImGui::Text("World Control Start Up.");
             ImGui::Text("Please set parameters");
             ImGui::Text("press TAB when finished");
             
@@ -484,25 +486,25 @@ int main(int argc, char*argv[])
             ImGui::SliderFloat("Z", &lightpos.z, 0.0f, 200.0f);
             
             
-            if (ImGui::Button("Jagged Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+            if (ImGui::Button("Jagged Mode"))   {
                 TerrainMode =0;
                 updateMap =!updateMap;
             }
-            if (ImGui::Button("Smooth Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+            if (ImGui::Button("Smooth Mode"))   {
                 TerrainMode =1;
                 updateMap =!updateMap;
             }
-            if (ImGui::Button("Block Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+            if (ImGui::Button("Block Mode"))   {
                 TerrainMode =2;
                 updateMap =!updateMap;
             }
             
-            if (ImGui::Button("Flat Shading Mode"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+            if (ImGui::Button("Flat Shading Mode"))   {
                 flatOn=!flatOn;
                 
             }
             
-            if (ImGui::Button("Textures On/Off"))   {                         // Buttons return true when clicked (most widgets return true when edited/activated)
+            if (ImGui::Button("Textures On/Off"))   {
                 textureOn=!textureOn;
                 
             }
@@ -514,6 +516,7 @@ int main(int argc, char*argv[])
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         
         
+        //get the heights from the 2d height position array
         
         float heights =  getHeight(cameraPosition.x,cameraPosition.z);
         float treeHeights = getHeightTrees(cameraPosition.x, cameraPosition.z);
@@ -546,7 +549,7 @@ int main(int argc, char*argv[])
         
         const float cameraAngularSpeed = 10.0f;
         
-        
+        //if gui control is enabled, make the mouse not control the camera, if gui control is disabled, let the mouse control the camera
         if(!GUICONTROL){
             cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
             cameraVerticalAngle   -= dy * cameraAngularSpeed * dt;
@@ -557,7 +560,6 @@ int main(int argc, char*argv[])
             cameraLookAt = vec3(cosf(phi)*cosf(theta), sinf(phi), -cosf(phi)*sinf(theta));
             vec3 cameraSideVector = cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
             normalize(cameraSideVector);
-            
             
             
             
@@ -593,8 +595,7 @@ int main(int argc, char*argv[])
             
             
         } else {
-            float theta = radians(cameraHorizontalAngle);
-            float phi = radians(cameraVerticalAngle);
+            
             if (cameraFirstPerson)
             {
                 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
@@ -602,7 +603,7 @@ int main(int argc, char*argv[])
             }
             else
             {
-                // Position of the camera is on the sphere looking at the point of interest (cameraPosition)
+                
                 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
                 
                 near_plane = 1.0f;
@@ -611,9 +612,9 @@ int main(int argc, char*argv[])
             
         }
         
-        //these are the following keybindings to control the olaf, the camera and the world orientation, textures, lighting and shadows
+        //these are the following keybindings to control the world
         
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // camera zoom in
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) //camera and light pos move left
         {
             cameraPosition.z -= currentCameraSpeed * dt*40;
             lightpos.z -= currentCameraSpeed * dt*40;
@@ -621,7 +622,7 @@ int main(int argc, char*argv[])
             
         }
         
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // camera zoom out
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) //camera and light pos move right
         {
             cameraPosition.z += currentCameraSpeed * dt*40;
             lightpos.z += currentCameraSpeed * dt*40;
@@ -631,7 +632,7 @@ int main(int argc, char*argv[])
         
         
         
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ) // move camera to the left
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS )//camera and light pos move backwards
         {
             cameraPosition.x -= currentCameraSpeed * dt*40;
             lightpos.x -= currentCameraSpeed * dt*40;
@@ -639,21 +640,21 @@ int main(int argc, char*argv[])
             
         }
         
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // move camera to the right
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) //camera and light pos move forward
         {
             cameraPosition.x += currentCameraSpeed * dt*40;
             lightpos.x += currentCameraSpeed * dt*40;
             
         }
         
-        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) // move camera down
+        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) //move light and camera down
         {
             cameraPosition.y -= currentCameraSpeed * dt*40;
             lightpos.y -= currentCameraSpeed * dt*40;
             
         }
         
-        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) // move camera up
+        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) //move light and camera up
         {
             cameraPosition.y += currentCameraSpeed * dt*40;
             lightpos.y += currentCameraSpeed * dt*40;
@@ -661,35 +662,35 @@ int main(int argc, char*argv[])
         }
         
         
-        if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) // move camera up
+        if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) //move light in x direction
         {
             float xTrans = 0.1;
             xTrans = xTrans + 0.001f;
             lightpos.x += xTrans;
         }
         
-        if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) // move camera up
+        if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) // move light in negative x direction
         {
             float xTrans = 0.1;
             xTrans = xTrans + 0.001f;
             lightpos.x -= xTrans;
         }
         
-        if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) // move camera up
+        if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) // move light up
         {
             float yTrans = 0.1;
             yTrans = yTrans + 0.001f;
             lightpos.y += yTrans;
         }
         
-        if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) // move camera up
+        if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) // move light down
         {
             float yTrans = 0.1;
             yTrans = yTrans + 0.001f;
             lightpos.y -= yTrans;
         }
         
-        if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) // move camera up
+        if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) // move light in z direction
         {
             
             float zTrans = 0.1;
@@ -697,7 +698,7 @@ int main(int argc, char*argv[])
             lightpos.z += zTrans ;
         }
         
-        if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) // move camera up
+        if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS) // move light in z negative direction
         {
             float zTrans = 0.1;
             zTrans = zTrans + 0.001f;
@@ -721,14 +722,14 @@ int main(int argc, char*argv[])
             primativeRender = GL_LINES;
         }
         
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) //rotate Y axis of the world
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) //change height upwards of world
         {
             xTrans = xTrans + 0.001f;
             if(xTrans >= 0.199)
                 xTrans = 0.199;
         }
         
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) // rotate Y axis of the world in the other orientation
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) // change height downwards of world
         {
             xTrans = xTrans - 0.001f;
             if(xTrans <= -0.99)
@@ -739,15 +740,6 @@ int main(int argc, char*argv[])
             glfwSetWindowShouldClose(window, true);
         
         
-        if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) // move camera down
-        {
-            cameraFirstPerson = true;
-        }
-        
-        if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) // move camera down
-        {
-            cameraFirstPerson = false;
-        }
         
         textureShader.use();
         
@@ -771,13 +763,16 @@ int main(int argc, char*argv[])
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+    if (key == GLFW_KEY_Q && action == GLFW_PRESS) //toggle flat shading
         flatOn = !flatOn;
     
-    if (key == GLFW_KEY_B && action == GLFW_PRESS)
+    if (key == GLFW_KEY_B && action == GLFW_PRESS) // toggle textures
         textureOn = !textureOn;
     
-    if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
+    if (key == GLFW_KEY_M && action == GLFW_PRESS) // toggle camera view
+        cameraFirstPerson = !cameraFirstPerson;
+    
+    if (key == GLFW_KEY_TAB && action == GLFW_PRESS) // toggle gui control
     {
         if(!GUICONTROL)
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -789,6 +784,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 
+//create terrain geomtry function
 void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& object_model)
 {
     vector<float> vertices;
@@ -948,6 +944,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
     
 }
 
+//render geometry and tree objects
 void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &cameraPosition, Model &object_model) {
     
     shader.use();
@@ -987,29 +984,33 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     }
     
     
-    
+    //if the height is adjusted below this dont draw the trees.
     if( xTrans>= -0.843) {
         shader.setBool("instanceOn", true);
         shader.setInt("treeColor", 1);
         
         for (unsigned int i = 0; i < object_model.meshes.size(); i++)
         {
-            
-            
-            
-            
-            glActiveTexture(GL_TEXTURE0);
-            if (i % 2 == 0)
+  
+            if (i % 2 == 0){
+                
+                glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D,8);
-            else
+                
+            }
+            
+            else{
+                
+                glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D,9);
+                
+            }
             
             glBindVertexArray(object_model.meshes.at(i).VAO);
             glBindBufferRange(GL_UNIFORM_BUFFER,0, object_model.getUniformIndex().at(i),0,object_model.getMaterialSize().at(i));
             glDrawElementsInstanced(primativeRender, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
             glBindVertexArray(0);
-            
-            
+                  
         }
         
         shader.setInt("treeColor", 0);
@@ -1024,7 +1025,7 @@ float Remap (float value, float from1, float to1, float from2, float to2)
     return (value - from1) / ((to1 - from1) * (to2 - from2) + from2);
 }
 
-
+//creates the map and calls create terrain geometry
 void createMap(Model &model)
 {
     for (int z = 0; z < zMapChunks; z++)
@@ -1036,7 +1037,7 @@ void createMap(Model &model)
     }
 }
 
-
+//barrycentric calcuation function from ThinMatrix opengl tutorial
 float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos)
 {
     float det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
@@ -1046,7 +1047,7 @@ float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos)
     return l1 * p1.y + l2 * p2.y + l3 * p3.y;
 }
 
-
+//get height funciton inspired by ThinMatric opengl tutorial
 float getHeight(float x, float z)
 {
     float terrainX = x -1;
@@ -1100,6 +1101,7 @@ void processMouseScroll(float yoffset)
         fovAngle = 45.0f;
 }
 
+//get height funciton inspired by ThinMatric opengl tutorial
 float getHeightTrees(float x, float z)
 {
     float terrainX = x -1;

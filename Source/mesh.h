@@ -1,3 +1,11 @@
+// COMP-371 Group Project Team 15
+// Procedural World Generation
+// Matthew Salaciak 29644490
+// Jeremy Gaudet 40045224
+//  Elsa Donovan 26857655
+
+
+
 #ifndef MESH_H
 #define MESH_H
 
@@ -94,8 +102,7 @@ public:
             glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
             
             
-            cout<<(name + number).c_str()<<i<<endl;
-            cout<<this->textures[i].id<<endl;
+           
        
         }
         

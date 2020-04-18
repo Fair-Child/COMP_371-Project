@@ -1,6 +1,8 @@
-//  A1_29644490
-// COMP 371 Assignment 1
-// Created by Matthew Salaciak 29644490.
+// COMP-371 Group Project Team 15
+// Procedural World Generation
+// Matthew Salaciak 29644490
+// Jeremy Gaudet 40045224
+//  Elsa Donovan 26857655
 
 
 
@@ -57,7 +59,7 @@ uniform vec3 viewPos;
 
 
 
-
+// calculate shadow
 float shadowCalculation(vec4 fragPosLightSpace)
 {
     // perform perspective divide
@@ -92,15 +94,16 @@ float shadowCalculation(vec4 fragPosLightSpace)
 void main()
 {
     
-    //    calculate the normals here!
+    
     vec3 result;
-          vec3 resultObj;
+    vec3 resultObj;
     
     if(flatOn) {
+        //    calculate the normals here!
         vec3 Normal = normalize( cross( dFdx( flatFragPos.xyz ), dFdy( flatFragPos.xyz ) ) );
-//        vec3 Normal = objNormal;
+
         float shadow = shadowCalculation(flatFragPosLightSpace);
-        
+        //ambient
         float ambientStrength = 0.9;
         vec3 ambient = ambientStrength * lightColor;
         
@@ -110,7 +113,7 @@ void main()
         vec3 lightDirection = normalize(lightPos - flatFragPos);
         float diff = max(dot(norm, lightDirection), 0.0f);
         vec3 diffuse = diff * lightColor;
-        
+        //spec
         float specularStrength = 0.8;
         vec3 viewDir = normalize(viewPos - flatFragPos);
         vec3 reflectDir = reflect(-lightDirection, norm);
@@ -119,12 +122,12 @@ void main()
         
         result = (ambient  + diffuse + specular) * (1 - shadow);
     } else if(!flatOn) {
-        
+          //    calculate the normals here!
         vec3 Normal = normalize( cross( dFdx( FragPos.xyz ), dFdy( FragPos.xyz ) ) );
-//            vec3 Normal = objNormal;
+
         
         float shadow = shadowCalculation(FragPosLightSpace);
-        
+        //ambient
         float ambientStrength = 0.5;
         vec3 ambient = ambientStrength * lightColor;
         
@@ -133,7 +136,7 @@ void main()
         vec3 lightDirection = normalize(lightPos - FragPos);
         float diff = max(dot(norm, lightDirection), 0.0f);
         vec3 diffuse = diff * lightColor;
-        
+        //spec
         float specularStrength = 0.8;
         vec3 viewDir = normalize(viewPos - FragPos);
         vec3 reflectDir = reflect(-lightDirection, norm);
@@ -155,26 +158,22 @@ void main()
             
         } else if (FragPos.y >= 1 && FragPos.y <=5.5){
             vec4 sandColor = vec4(0.86f,0.70f,0.30f,1.0f);
-            vec4 textResult= vec4(result * texture(sandyTexture, vertexUV).rgb ,1.0f);
-            //            FragColor = texture(sandyTexture, vertexUV) * sandColor; //sand
+            vec4 textResult= vec4(result * texture(sandyTexture, vertexUV).rgb ,1.0f); //sand
             FragColor = textResult * sandColor;
             
         } else if (FragPos.y >= 5.5 && FragPos.y <=17.5){
             vec4 grassColor =vec4(0.35f,0.56f,0.30f,1.0f);
-            vec4 textResult= vec4(result * texture(grassTexture, vertexUV).rgb ,1.0f);
-            //            FragColor = texture(grassTexture, vertexUV) * grassColor;;
+            vec4 textResult= vec4(result * texture(grassTexture, vertexUV).rgb ,1.0f); //grass
             FragColor = textResult * grassColor;
             
         }else if (FragPos.y >= 17.5 && FragPos.y <=26.5){
             vec4 rockColor = vec4(0.75f,0.53f,0.4f,1.0f);
-            vec4 textResult= vec4(result * texture(rockyTexture, vertexUV).rgb ,1.0f);
-            //            FragColor = texture(rockyTexture, vertexUV) * rockColor;
+            vec4 textResult= vec4(result * texture(rockyTexture, vertexUV).rgb ,1.0f); //rocky
             FragColor = textResult * rockColor;
             
         } else  if(FragPos.y >26.5){
             vec4 snowColor = vec4(1.0f);
-            vec4 textResult= vec4(result * texture(snowTexture, vertexUV).rgb ,1.0f);
-            //            FragColor = texture(snowTexture, vertexUV) * snowColor; //snow
+            vec4 textResult= vec4(result * texture(snowTexture, vertexUV).rgb ,1.0f); //snow
             FragColor = textResult * snowColor;
         }
         
@@ -198,7 +197,7 @@ void main()
         }
         else if(FragPos.y >26.5) {
             vec3 snowColor = vec3(1.0f);
-            FragColor = vec4(snowColor * result,1.0f);
+            FragColor = vec4(snowColor * result,1.0f);  //snow
             
         }
     }
@@ -209,10 +208,10 @@ void main()
         
         
         if(flatOn) {
-//            vec3 Normal = normalize( cross( dFdx( flatFragPos.xyz ), dFdy( flatFragPos.xyz ) ) );
+
             vec3 Normal =objNormal;
             float shadow = shadowCalculation(flatFragPosLightSpace);
-            
+            //ambient
             float ambientStrength = 1.2;
             vec3 ambient = ambientStrength * lightColor;
             
@@ -221,7 +220,7 @@ void main()
             vec3 lightDirection = normalize(lightPos - flatFragPos);
             float diff = max(dot(norm, lightDirection), 0.0f);
             vec3 diffuse = diff * lightColor;
-            
+            //spec
             float specularStrength = 0.9;
             vec3 viewDir = normalize(viewPos - flatFragPos);
             vec3 reflectDir = reflect(-lightDirection, norm);
@@ -231,12 +230,11 @@ void main()
             resultObj = (ambient  + diffuse + specular) * (1 - shadow);
         } else if(!flatOn) {
             
-//            vec3 Normal = normalize( cross( dFdx( FragPos.xyz ), dFdy( FragPos.xyz ) ) );
                 vec3 Normal =objNormal;
             
             
             float shadow = shadowCalculation(FragPosLightSpace);
-            
+            //ambient
             float ambientStrength = 1.2;
             vec3 ambient = ambientStrength * lightColor;
             
@@ -245,7 +243,7 @@ void main()
             vec3 lightDirection = normalize(lightPos - FragPos);
             float diff = max(dot(norm, lightDirection), 0.0f);
             vec3 diffuse = diff * lightColor;
-            
+            //spec
             float specularStrength = 0.9;
             vec3 viewDir = normalize(viewPos - FragPos);
             vec3 reflectDir = reflect(-lightDirection, norm);

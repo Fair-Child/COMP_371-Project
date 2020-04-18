@@ -1,11 +1,9 @@
-//
-//  vertices.h
-//  A1_29644490
-//
-// COMP 371 Assignment 1
-//
-// Created by Matthew Salaciak 29644490.
-//
+// COMP-371 Group Project Team 15
+// Procedural World Generation
+// Matthew Salaciak 29644490
+// Jeremy Gaudet 40045224
+//  Elsa Donovan 26857655
+
 
 #include <iostream>
 #include <list>
