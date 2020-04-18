@@ -73,30 +73,36 @@ void main()
     float changeY = calPos.y * newY;
     calPos.y = calPos.y + changeY;
     
-    //calculate normals here
-    
-//    objNormal = aNormal;
-    
-    objNormal = mat3(transpose(inverse(mvp))) * aNormal;
-    
-    
-    vertexUV = aUV;
-    FragPos = vec3(mvp * vec4(calPos,1.0f));
-    FragPosLightSpace = lightSpaceMatrix * vec4(FragPos,1.0f);
-    //set flat variables
-    flatFragPos = FragPos;
-    flatFragPosLightSpace =FragPosLightSpace;
-    
+
     
     
     mat4 matrixTotal;
     
     if (!instanceOn) {
+        
+        objNormal = mat3(transpose(inverse(mvp))) * aNormal;
+        
+        
+        vertexUV = aUV;
+        FragPos = vec3(mvp * vec4(calPos,1.0f));
+        FragPosLightSpace = lightSpaceMatrix * vec4(FragPos,1.0f);
+        //set flat variables
+        flatFragPos = FragPos;
+        flatFragPosLightSpace =FragPosLightSpace;
+        
         matrixTotal = projection * view * mvp;
         gl_Position = matrixTotal * vec4(calPos, 1.0f);
     }
     else {
+        objNormal = mat3(transpose(inverse(aInstanceMatrix))) * aNormal;
         
+        
+        vertexUV = aUV;
+        FragPos = vec3(aInstanceMatrix * vec4(calPos,1.0f));
+        FragPosLightSpace = lightSpaceMatrix * vec4(FragPos,1.0f);
+        //set flat variables
+        flatFragPos = FragPos;
+        flatFragPosLightSpace =FragPosLightSpace;
         matrixTotal = projection * view * aInstanceMatrix;
         gl_Position = matrixTotal * vec4(calPos, 1.0f);
     }
