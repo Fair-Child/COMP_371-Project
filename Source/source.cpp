@@ -107,6 +107,7 @@ const int mapX = 512;
 const int mapZ = 512;
 int nIndices = mapX * mapZ * 6;
 float heightPos [mapX*xMapChunks][mapZ*zMapChunks];
+float heightPosTrees [mapX*xMapChunks][mapZ*zMapChunks];
 
 //camera info
 vec3 cameraPosition(0.0f,43.0f,0.0f);
@@ -131,12 +132,13 @@ void createMap(Model &model);
 void renderTerrain(vector <GLuint> &VAO , Shader &shader,  int &nIndices,vec3 &cameraPosition, Model &model);
 void createTerrianGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model &model);
 float getHeight(float x, float z);
+float getHeightTrees(float x, float z);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processMouseScroll(float yoffset);
 
 
 // model
-const int number_of_trees = 800;
+const int number_of_trees = 1000;
 
 
 //noise options
@@ -327,7 +329,7 @@ int main(int argc, char*argv[])
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
     
-      float near_plane = 1.0f, far_plane = 300.0f;
+    float near_plane = 1.0f, far_plane = 300.0f;
     
     // Entering Main Loop
     // ------------------
@@ -391,7 +393,7 @@ int main(int argc, char*argv[])
         
         // this part is largely inspired by learnopengl's shadow tutorial and lab 8
         // render shadows from lights perspective
-      
+        
         
         
         lightProjection = glm::perspective(glm::radians(130.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
@@ -512,13 +514,21 @@ int main(int argc, char*argv[])
         
         
         float heights =  getHeight(cameraPosition.x,cameraPosition.z);
+        float treeHeights = getHeightTrees(cameraPosition.x, cameraPosition.z);
         
-        //collision detection
+        //collision detection for camera and terrain
         
         if(cameraPosition.y  + xTrans< (heights +5.99 )) {
             cameraPosition.y = (heights  +5.99) +xTrans;
             
         }
+        
+         //collision detection for camera and tree objs
+        if(cameraPosition.y  + xTrans< (treeHeights +5.99 )) {
+            cameraPosition.y = (treeHeights  +5.99) +xTrans;
+            
+        }
+        
         
         
         double mousePosX, mousePosY;
@@ -564,17 +574,17 @@ int main(int argc, char*argv[])
             if (cameraFirstPerson)
             {
                 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
-                 fovAngle = 45;
+               
                 near_plane = 1.0f;
                 far_plane = 300.0f;
                 
             }
             else
             {
-            
+                
                 
                 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
-                fovAngle = 70;
+                
                 near_plane = 1.0f;
                 far_plane = 125.0f;
             }
@@ -586,15 +596,15 @@ int main(int argc, char*argv[])
             if (cameraFirstPerson)
             {
                 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
-                fovAngle = 45;
+               
             }
             else
             {
                 // Position of the camera is on the sphere looking at the point of interest (cameraPosition)
                 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
-                fovAngle = 70;
+             
                 near_plane = 1.0f;
-                               far_plane = 125.0f;
+                far_plane = 125.0f;
             }
             
         }
@@ -858,6 +868,7 @@ void createTerrainGeometry(GLuint &VAO, int &xOffset, int &zOffset, Model& objec
         float rotAngle = (rand() % 360);
         model = glm::rotate(model, rotAngle, glm::vec3(0.0f, 1.0f, 0.0f));
         modelMatrices[counter] = model;
+        heightPosTrees[(int)z][(int)x] = y;
         counter++;
     }
     
@@ -993,7 +1004,7 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
             
             glBindVertexArray(object_model.meshes.at(i).VAO);
             glBindBufferRange(GL_UNIFORM_BUFFER,0, object_model.getUniformIndex().at(i),0,object_model.getMaterialSize().at(i));
-            glDrawElementsInstanced(GL_TRIANGLES, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
+            glDrawElementsInstanced(primativeRender, object_model.meshes.at(i).indices.size(), GL_UNSIGNED_INT, 0, number_of_trees);
             glBindVertexArray(0);
             
             
@@ -1087,3 +1098,38 @@ void processMouseScroll(float yoffset)
         fovAngle = 45.0f;
 }
 
+float getHeightTrees(float x, float z)
+{
+    float terrainX = x -1;
+    float terrainZ = z-1;
+    
+    int height = mapX*xMapChunks;
+    
+    int gridSize = (mapX*xMapChunks) / height;
+    
+    int gridX = floor(terrainX/gridSize);
+    int gridZ = floor(terrainZ / gridSize);
+    
+    if(gridX >= (height-1)|| gridZ >= (height-1)|| gridX < 0 || gridZ <0)
+        return 0;
+    
+    int xCoordMod =  (int)terrainX % mapZ;
+    int zCoordMod = (int)terrainZ % mapZ;
+    
+    float xCoord = (float)xCoordMod/(float)mapX;
+    float zCoord = (float)zCoordMod/(float)mapZ;
+    
+    float answer;
+    if(xCoord <= (1-zCoord))
+    {
+        answer = barryCentric(glm::vec3(0, heightPosTrees[gridZ][gridX], 0),
+                              glm::vec3(1, heightPosTrees[gridZ+1][gridX], 0), glm::vec3(0, heightPosTrees[gridZ][gridX + 1], 1), glm::vec2(xCoord, zCoord));
+    }
+    else
+    {
+        answer = barryCentric(glm::vec3(1, heightPosTrees[gridZ+1][gridX], 0),
+                              glm::vec3(1, heightPosTrees[gridZ+1][gridX+1], 1), glm::vec3(0, heightPosTrees[gridZ][gridX + 1], 1), glm::vec2(xCoord, zCoord));
+    }
+    
+    return answer;
+}
