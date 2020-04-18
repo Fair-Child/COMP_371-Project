@@ -526,7 +526,7 @@ int main(int argc, char*argv[])
         }
         
         //collision detection for camera and tree objs
-        if(cameraPosition.y  + xTrans< (treeHeights +5.99 )) {
+        if(cameraPosition.y  + xTrans< (treeHeights +7.99 )) {
             cameraPosition.y = (treeHeights  +5.99) +xTrans;
             
         }
