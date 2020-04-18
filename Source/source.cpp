@@ -327,6 +327,7 @@ int main(int argc, char*argv[])
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
     
+      float near_plane = 1.0f, far_plane = 300.0f;
     
     // Entering Main Loop
     // ------------------
@@ -390,7 +391,7 @@ int main(int argc, char*argv[])
         
         // this part is largely inspired by learnopengl's shadow tutorial and lab 8
         // render shadows from lights perspective
-        float near_plane = 1.0f, far_plane = 300.0f;
+      
         
         
         lightProjection = glm::perspective(glm::radians(130.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
@@ -563,16 +564,19 @@ int main(int argc, char*argv[])
             if (cameraFirstPerson)
             {
                 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
+                 fovAngle = 45;
+                near_plane = 1.0f;
+                far_plane = 300.0f;
+                
             }
             else
             {
-                // Position of the camera is on the sphere looking at the point of interest (cameraPosition)
-                float radius = 5.0f;
-                vec3 position = cameraPosition - vec3(radius * cosf(phi)*cosf(theta),
-                                                      radius * sinf(phi),
-                                                      -radius * cosf(phi)*sinf(theta));
+            
                 
-                viewMatrix = lookAt(position, cameraPosition, cameraUp);
+                viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
+                fovAngle = 70;
+                near_plane = 1.0f;
+                far_plane = 125.0f;
             }
             
             
@@ -582,16 +586,15 @@ int main(int argc, char*argv[])
             if (cameraFirstPerson)
             {
                 viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
+                fovAngle = 45;
             }
             else
             {
                 // Position of the camera is on the sphere looking at the point of interest (cameraPosition)
-                float radius = 5.0f;
-                vec3 position = cameraPosition - vec3(radius * cosf(phi)*cosf(theta),
-                                                      radius * sinf(phi),
-                                                      -radius * cosf(phi)*sinf(theta));
-                
-                viewMatrix = lookAt(position, cameraPosition, cameraUp);
+                viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
+                fovAngle = 70;
+                near_plane = 1.0f;
+                               far_plane = 125.0f;
             }
             
         }
@@ -737,7 +740,7 @@ int main(int argc, char*argv[])
         textureShader.use();
         
         glfwSetScrollCallback(window, scroll_callback);
-        projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, 0.1f,300.0f);
+        projectionMatrix = perspective(radians(fovAngle),1024.0f / 768.0f, near_plane,far_plane);
         
         glUniformMatrix4fv(viewMatrix_texture, 1, GL_FALSE, &viewMatrix[0][0]);
         glUniformMatrix4fv(projectionMatrix_texture, 1, GL_FALSE, &projectionMatrix[0][0]);
