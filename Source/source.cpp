@@ -454,7 +454,6 @@ int main(int argc, char*argv[])
         GLuint skyBoxProjectionMatrix = glGetUniformLocation(skyBoxShader.ID, "projection");
         mat4 rotateSkyBox = glm::rotate(mat4(1.0f), 180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
         mat4 view = mat4(mat3(viewMatrix));
-        
         view = view *rotateSkyBox;
         glUniformMatrix4fv(skyBoxViewMatrix, 1, GL_FALSE, &view[0][0]);
         glUniformMatrix4fv(skyBoxProjectionMatrix, 1, GL_FALSE, &projectionMatrix[0][0]);
