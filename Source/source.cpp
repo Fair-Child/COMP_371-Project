@@ -397,7 +397,7 @@ int main(int argc, char*argv[])
         
         lightProjection = glm::perspective(glm::radians(130.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
         
-//     lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        //     lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
         
         
         lightView = glm::lookAt(lightpos, glm::vec3(0.0f), glm::vec3(0.0, 0.0, 1.0));
@@ -602,7 +602,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // camera zoom in
         {
             cameraPosition.z -= currentCameraSpeed * dt*40;
-//            lightpos.z -= currentCameraSpeed * dt*40;
+            //            lightpos.z -= currentCameraSpeed * dt*40;
             
             
         }
@@ -610,7 +610,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // camera zoom out
         {
             cameraPosition.z += currentCameraSpeed * dt*40;
-//            lightpos.z += currentCameraSpeed * dt*40;
+            //            lightpos.z += currentCameraSpeed * dt*40;
             
             
         }
@@ -620,7 +620,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ) // move camera to the left
         {
             cameraPosition.x -= currentCameraSpeed * dt*40;
-//            lightpos.x -= currentCameraSpeed * dt*40;
+            //            lightpos.x -= currentCameraSpeed * dt*40;
             
             
         }
@@ -628,7 +628,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // move camera to the right
         {
             cameraPosition.x += currentCameraSpeed * dt*40;
-//            lightpos.x += currentCameraSpeed * dt*40;
+            //            lightpos.x += currentCameraSpeed * dt*40;
             
         }
         
@@ -985,6 +985,10 @@ void renderTerrain(vector <GLuint> &VAO, Shader &shader, int &nIndices, vec3 &ca
     
     for (unsigned int i = 0; i < object_model.meshes.size(); i++)
     {
+        
+        
+        
+        
         glActiveTexture(GL_TEXTURE0);
         if (i % 2 == 0)
             glBindTexture(GL_TEXTURE_2D,8);
