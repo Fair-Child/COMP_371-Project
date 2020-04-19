@@ -1,15 +1,13 @@
 # Walkthrough World - README
+Created by:
+- Matthew Salaciak
+- Jeremy Gaudet
+- Elsa Donovan
 
-COMP-371 Group Project Team 15
-Procedural World Generation
-Matthew Salaciak 29644490
-Jeremy Gaudet 40045224
-Elsa Donovan 26857655
-
-## Requirements
+## Software Requirements
 
 * We're using assimp to load objects and their data into the program, and it is therefore necessary to have assimp installed to run correctly. On a mac, this can be done using the command "brew install assimp".
-* For Windows, the download page can be accessed at: http://www.assimp.org/index.php/downloads
+* For Windows, the download page can be accessed [here](http://www.assimp.org/index.php/downloads).
 
 ## Graphical User Interface Panel
 
@@ -68,5 +66,5 @@ Elsa Donovan 26857655
 | q | flat shading on/off |
 | b | textures on/off |
 | m | camera view between first & third person |
-| tab = display GUI controls on/off |
+| tab | display GUI controls on/off |
 
