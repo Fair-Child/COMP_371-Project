@@ -78,6 +78,7 @@
 		34FD69FD243A4E56004BCE18 /* skyBoxShader.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = skyBoxShader.fs; sourceTree = "<group>"; };
 		34FD69FE243A4E66004BCE18 /* skyBoxShader.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = skyBoxShader.vs; sourceTree = "<group>"; };
 		34FD69FF243A50D6004BCE18 /* skyBoxTextures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = skyBoxTextures; sourceTree = "<group>"; };
+		53042F91244CD70E005BAE99 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		53076D91244BB8500070B121 /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		53708039243E80C60097002B /* model.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = model.h; sourceTree = "<group>"; };
 		5370803A243E80FB0097002B /* mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = "<group>"; };
@@ -134,6 +135,7 @@
 		0371ABC21A6EAF2E00029CF8 = {
 			isa = PBXGroup;
 			children = (
+				53042F91244CD70E005BAE99 /* README.md */,
 				34DCF3852414714300E0609F /* libfreeimage.a */,
 				038B785E1A6EB3F500111E36 /* Source */,
 				034F0BB31A7010160028E1BA /* Resources */,

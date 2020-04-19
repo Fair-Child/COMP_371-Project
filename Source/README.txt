@@ -7,6 +7,14 @@ Elsa Donovan 26857655
 WALKTHROUGH WORLD - README
 ==========================
 
+Requirements
+------------
+
+* We're using assimp to load objects and their data into the program, and it is therefore necessary to have
+assimp installed to run correctly. On a mac, this can be done using the command "brew install assimp".
+For Windows, the download page can be accessed at: http://www.assimp.org/index.php/downloads
+
+
 Graphical User Interface Panel
 ------------------------------
 
