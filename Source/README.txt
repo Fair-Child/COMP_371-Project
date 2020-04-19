@@ -7,6 +7,9 @@ Elsa Donovan 26857655
 WALKTHROUGH WORLD - README
 ==========================
 
+REQUIRES ASSIMP TO BE INSTALLED FOR MODEL LOADING
+
+
 Graphical User Interface Panel
 ------------------------------
 
