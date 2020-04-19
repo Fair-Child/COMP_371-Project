@@ -523,8 +523,8 @@ int main(int argc, char*argv[])
         
         //collision detection for camera and terrain
         
-        if(cameraPosition.y  + xTrans< (heights +5.99 )) {
-            cameraPosition.y = (heights  +5.99) +xTrans;
+        if(cameraPosition.y  + xTrans< (heights +7.99 )) {
+            cameraPosition.y = (heights  +7.99) +xTrans;
             
         }
         
