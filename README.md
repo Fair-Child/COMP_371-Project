@@ -4,6 +4,13 @@ Created by:
 - Jeremy Gaudet
 - Elsa Donovan
 
+* Endless Generative World implemented in openGL. 
+
+![Image of Project](https://github.com/msalaciak/COMP_371-Project/blob/master/screenshots/Untitled%205.png)
+![Image of Project](https://github.com/msalaciak/COMP_371-Project/blob/master/screenshots/liltree.png)
+![Image of Project](https://github.com/msalaciak/COMP_371-Project/blob/master/screenshots/Untitled%202.png)
+
+
 ## Software Requirements
 
 * We're using assimp to load objects and their data into the program, and it is therefore necessary to have assimp installed to run correctly. On a mac, this can be done using the command "brew install assimp".
